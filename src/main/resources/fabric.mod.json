@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "hohxil-auto-login",
+  "version": "${version}",
+  "name": "Hohxil-Auto-Login",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/hohxil-auto-login/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "fabric-datagen": [
+      "net.ofts.hohxilAutoLogin.client.HohxilAutoLoginDataGenerator"
+    ],
+    "client": [
+      "net.ofts.hohxilAutoLogin.client.HohxilAutoLoginClient"
+    ],
+    "main": [
+      "net.ofts.hohxilAutoLogin.HohxilAutoLogin"
+    ]
+  },
+  "mixins": [
+    "hohxil-auto-login.mixins.json",
+    {
+      "config": "hohxil-auto-login.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
