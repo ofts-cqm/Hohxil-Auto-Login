@@ -15,6 +15,7 @@ public class AutoLoginConfig {
             FabricLoader.getInstance().getConfigDir().resolve("autologin.json");
 
     public String password = "";
+    public String address = "cko.cc";
     public TargetServer targetServer = TargetServer.SURVIVAL;
 
     public enum TargetServer {

@@ -8,6 +8,7 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.DisconnectedScreen;
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
 import net.minecraft.client.network.ServerAddress;
 import net.minecraft.client.network.ServerInfo;
@@ -50,16 +51,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                             // /autologin setpassword <password>
                             .then(literal("setpassword")
                                     .then(argument("password", StringArgumentType.greedyString())
-                                            .executes(ctx -> {
-                                                String password = StringArgumentType.getString(ctx, "password");
-
-                                                AutoLoginConfig config = AutoLoginConfig.get();
-                                                config.password = password;
-                                                AutoLoginConfig.save();
-
-                                                sendMessage("§a密码更新成功！");
-                                                return 1;
-                                            })
+                                            .executes(HohxilAutoLoginClient::changePassword)
                                     )
                                     .executes(ctx -> {
                                         sendMessage("§e使用方法: /autologin setpassword <password>");
@@ -77,38 +69,70 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                                                 builder.suggest("none");
                                                 return builder.buildFuture();
                                             })
-                                            .executes(ctx -> {
-                                                String input = StringArgumentType.getString(ctx, "server").toLowerCase();
-
-                                                AutoLoginConfig config = AutoLoginConfig.get();
-
-                                                switch (input) {
-                                                    case "survival" -> config.targetServer = AutoLoginConfig.TargetServer.SURVIVAL;
-                                                    case "redstone" -> config.targetServer = AutoLoginConfig.TargetServer.REDSTONE;
-                                                    case "minigames" -> config.targetServer = AutoLoginConfig.TargetServer.MINIGAMES;
-                                                    case "none" -> config.targetServer = AutoLoginConfig.TargetServer.NONE;
-                                                    default -> {
-                                                        sendMessage("§c无效的服务器！");
-                                                        return 0;
-                                                    }
-                                                }
-
-                                                AutoLoginConfig.save();
-
-                                                sendMessage("§a已选择服务器: " + config.targetServer.name().toLowerCase());
-                                                return 1;
-                                            })
+                                            .executes(HohxilAutoLoginClient::changeServer)
                                     )
                                     .executes(ctx -> {
                                         sendMessage("§e使用方法: /autologin chooseserver <survival|minigames|redstone|none>");
                                         return 1;
                                     })
                             )
+
+                            .then(literal("changeaddress")
+                                    .then(argument("address", StringArgumentType.greedyString())
+                                            .suggests((context, builder) ->
+                                                    builder.suggest("cko.cc").suggest("mc.cko.cc:19999").buildFuture()
+                                            )
+                                            .executes(HohxilAutoLoginClient::changeAddress)
+                                    )
+                                    .executes(ctx -> {
+                                        sendMessage("§e使用方法: /autologin changeaddress <服务器地址>");
+                                        return 1;
+                                    })
+                            )
+
             );
         });
     }
 
-    private void sendMessage(String s) {
+    private static int changeAddress(CommandContext<FabricClientCommandSource> ctx){
+        String input = StringArgumentType.getString(ctx, "address").toLowerCase();
+        AutoLoginConfig config = AutoLoginConfig.get();
+        config.address = input;
+        AutoLoginConfig.save();
+
+        LOGGER.info("updated server address to: " + config.address);
+
+        MinecraftClient.getInstance().player.sendMessage(
+                Text.literal("§a[可可西里自动登录] 服务器地址更新成功！"),
+                false
+        );
+
+        return 1;
+    }
+
+    private static int changeServer(CommandContext<FabricClientCommandSource> ctx){
+        String input = StringArgumentType.getString(ctx, "server").toLowerCase();
+
+        AutoLoginConfig config = AutoLoginConfig.get();
+
+        switch (input) {
+            case "survival" -> config.targetServer = AutoLoginConfig.TargetServer.SURVIVAL;
+            case "redstone" -> config.targetServer = AutoLoginConfig.TargetServer.REDSTONE;
+            case "minigames" -> config.targetServer = AutoLoginConfig.TargetServer.MINIGAMES;
+            case "none" -> config.targetServer = AutoLoginConfig.TargetServer.NONE;
+            default -> {
+                sendMessage("§c无效的服务器！");
+                return 0;
+            }
+        }
+
+        AutoLoginConfig.save();
+
+        sendMessage("§a已选择服务器: " + config.targetServer.name().toLowerCase());
+        return 1;
+    }
+
+    private static void sendMessage(String s) {
         MinecraftClient.getInstance().player.sendMessage(
                 Text.literal(s),
                 false
@@ -141,14 +165,18 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
             } catch (InterruptedException ignored) {
             }
 
+            if (!(client.currentScreen instanceof DisconnectedScreen)) return;
+
             client.execute(() -> {
                 LOGGER.info("reconnecting...");
+
+                String address = AutoLoginConfig.get().address;
 
                 ConnectScreen.connect(
                         client.currentScreen,
                         client,
-                        ServerAddress.parse("cko.cc"),
-                        new ServerInfo("Minecraft Server", "cko.cc", ServerInfo.ServerType.OTHER),
+                        ServerAddress.parse(address),
+                        new ServerInfo("Minecraft Server", address, ServerInfo.ServerType.OTHER),
                         false,
                         null
                 );
@@ -161,7 +189,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
 
         ServerInfo server = MinecraftClient.getInstance().getCurrentServerEntry();
 
-        if (server == null || !server.address.equals("cko.cc")) {
+        if (server == null || !server.address.equals(AutoLoginConfig.get().address)) {
             return;
         }
 
