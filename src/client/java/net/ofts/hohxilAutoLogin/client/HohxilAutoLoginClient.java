@@ -5,6 +5,7 @@ import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
@@ -31,6 +32,12 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
     public void onInitializeClient() {
         ClientPlayConnectionEvents.JOIN.register(
                 (a, b, c) -> onJoin()
+        );
+        ClientPlayConnectionEvents.DISCONNECT.register(
+                (a, b) -> shouldAutoLogin = true
+        );
+        ClientLoginConnectionEvents.DISCONNECT.register(
+                (a, b) -> shouldAutoLogin = true
         );
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> dispatcher.register(
                 literal("autologin")
@@ -237,9 +244,12 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
             client.execute(() -> {
                 LOGGER.info("Sending ({}) custom commands", config.customCommands.size());
                 for (String customCommand : config.customCommands) {
-                    Objects.requireNonNull(client.getNetworkHandler()).sendChatCommand(customCommand);
+                    Objects.requireNonNull(client.getNetworkHandler())
+                            .sendChatCommand(customCommand);
                 }
             });
+
+            if (config.targetServer == AutoLoginConfig.TargetServer.NONE) return;
 
             AtomicBoolean flag = new AtomicBoolean(true);
             for (int i = 0; (config.retryCount == 0 || i < config.retryCount) && flag.get(); i++) { // retry for ~10 seconds
