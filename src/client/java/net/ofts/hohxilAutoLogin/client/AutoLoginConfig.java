@@ -19,14 +19,14 @@ public class AutoLoginConfig {
     public String password = "";
     public String address = "cko.cc";
     public TargetServer targetServer = TargetServer.SURVIVAL;
-    public int connectionRetryCount = 20;
+    public int connectionRetryCount = 0;
     public List<String> reconnectionFilter = new ArrayList<>();
     public List<String> customCommands = new ArrayList<>();
     public List<String> customCommandsAfterServer = new ArrayList<>();
     public int joinDelay = 3000;
     public int loginDelay = 1000;
     public int openMenuDelay = 500;
-    public int retryCount = 0;
+    public int retryCount = 20;
     public int clickDelay = 1000;
     public int commandDelay = 500;
     public boolean closeAnnouncement = true;
@@ -52,18 +52,25 @@ public class AutoLoginConfig {
         switch (field) {
             case 0:
                 joinDelay = delay;
+                break;
             case 1:
                 loginDelay = delay;
+                break;
             case 2:
                 openMenuDelay = delay;
+                break;
             case 3:
                 retryCount = delay;
+                break;
             case 5:
                 connectionRetryCount = delay;
+                break;
             case 6:
                 commandDelay = delay;
+                break;
             default:
                 clickDelay = delay;
+                break;
         }
         save();
     }
