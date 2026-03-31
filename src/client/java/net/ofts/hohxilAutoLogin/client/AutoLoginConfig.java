@@ -22,6 +22,7 @@ public class AutoLoginConfig {
     public int connectionRetryCount = 20;
     public List<String> reconnectionFilter = new ArrayList<>();
     public List<String> customCommands = new ArrayList<>();
+    public List<String> customCommandsAfterServer = new ArrayList<>();
     public int joinDelay = 3000;
     public int loginDelay = 1000;
     public int openMenuDelay = 500;

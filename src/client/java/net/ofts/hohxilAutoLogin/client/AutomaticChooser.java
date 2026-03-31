@@ -38,11 +38,7 @@ public class AutomaticChooser {
         });
 
         LOGGER.info("clicked");
-
-        try {
-            Thread.sleep(1000); // 3 seconds
-        } catch (InterruptedException ignored) {
-        }
+        HohxilAutoLoginClient.sendAfterServerCommands = true;
     }
 
     private static void clickSlot(HandledScreen<?> screen, int slotIndex) {

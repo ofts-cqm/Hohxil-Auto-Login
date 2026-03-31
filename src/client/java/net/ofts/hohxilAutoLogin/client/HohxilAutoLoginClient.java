@@ -5,13 +5,10 @@ import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
-import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.client.gui.screen.multiplayer.CodeOfConductScreen;
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
 import net.minecraft.client.network.ServerAddress;
 import net.minecraft.client.network.ServerInfo;
@@ -29,6 +26,7 @@ import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.*;
 public class HohxilAutoLoginClient implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("HohxilAutoLogin");
     public static boolean shouldAutoLogin = true;
+    public static boolean sendAfterServerCommands = false;
     public static int reconnectionTried = 0;
     public static ServerInfo oldInfo = null;
 
@@ -189,6 +187,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
 
         reconnectionTried++;
         shouldAutoLogin = true;
+        sendAfterServerCommands = false;
 
         new Thread(() -> {
             if (!force) {
@@ -222,6 +221,33 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
 
     public static void onJoin() {
         reconnectionTried = 0;
+
+        if (sendAfterServerCommands){
+            sendAfterServerCommands = false;
+
+            new Thread(() -> {
+                AutoLoginConfig config = AutoLoginConfig.get();
+
+                try {
+                    Thread.sleep(config.commandDelay); // 2 seconds
+                } catch (InterruptedException ignored) {
+                }
+
+                MinecraftClient client = MinecraftClient.getInstance();
+
+                client.execute(() -> {
+                    LOGGER.info("Sending ({}) custom commands after joining server", config.customCommandsAfterServer.size());
+                    for (String customCommand : config.customCommandsAfterServer) {
+                        Objects.requireNonNull(client.getNetworkHandler())
+                                .sendChatCommand(customCommand);
+                    }
+                });
+
+            }).start();
+
+            return;
+        }
+
         if (!shouldAutoLogin) return;
 
         ServerInfo server = MinecraftClient.getInstance().getCurrentServerEntry();

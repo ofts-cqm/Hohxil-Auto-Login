@@ -13,6 +13,7 @@ import net.ofts.hohxilAutoLogin.client.AutoLoginConfig;
 import net.ofts.hohxilAutoLogin.client.AutomaticChooser;
 import net.ofts.hohxilAutoLogin.client.HohxilAutoLoginClient;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -24,6 +25,7 @@ import java.lang.reflect.Method;
 @Mixin(MinecraftClient.class)
 public class MinecraftClientMixin {
 
+    @Unique
     private static Screen lastScreen = null;
 
     @Inject(method = "setScreen", at = @At("TAIL"))
@@ -39,7 +41,7 @@ public class MinecraftClientMixin {
             if (field.get(bookScreen) instanceof BookScreen.Contents(java.util.List<Text> pages)){
                 for (Text text : pages){
                     if (text.getString().contains("点击查看上个公告")){
-                        MinecraftClient.getInstance().setScreen(null);
+                        MinecraftClient.getInstance().setScreen(lastScreen);
                         assert MinecraftClient.getInstance().player != null;
                         MinecraftClient.getInstance().player.sendMessage(
                                 Text.literal("已为您自动关闭公告").withColor(0x00FFFF), false

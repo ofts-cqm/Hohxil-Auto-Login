@@ -49,6 +49,13 @@ public class ModMenuAPIImpl implements ModMenuApi {
                                     .setTooltip(Text.literal("当进入游戏后，是否自动关闭公告"))
                                     .setSaveConsumer(ModMenuAPIImpl::setAnnouncement)
                                     .build()
+                    )
+                    .addEntry(
+                            entryBuilder.startBooleanToggle(Text.literal("自动进入游戏"), config.autoConnect)
+                                    .setDefaultValue(false)
+                                    .setTooltip(Text.literal("打开游戏后自动加入服务器"))
+                                    .setSaveConsumer(ModMenuAPIImpl::setAutoConnect)
+                                    .build()
                     );
             builder.getOrCreateCategory(Text.literal("高级"))
                     .addEntry(generateDelayEntry(entryBuilder, "重连延时", "每次重连时等待的时间", 0))
@@ -67,10 +74,18 @@ public class ModMenuAPIImpl implements ModMenuApi {
                     )
                     .addEntry(
                             entryBuilder
-                                    .startStrList(Text.literal("指令列表"), config.customCommands)
+                                    .startStrList(Text.literal("登录指令列表"), config.customCommands)
                                     .setTooltip(Text.literal("除了登陆指令以外，重连时发送的指令列表"))
                                     .setDefaultValue(new ArrayList<>())
                                     .setSaveConsumer(ModMenuAPIImpl::setCommandList)
+                                    .build()
+                    )
+                    .addEntry(
+                            entryBuilder
+                                    .startStrList(Text.literal("服务器指令列表"), config.customCommandsAfterServer)
+                                    .setTooltip(Text.literal("进入服务器（比如生存服）之后发送的指令"))
+                                    .setDefaultValue(new ArrayList<>())
+                                    .setSaveConsumer(ModMenuAPIImpl::setCommandListAfterServer)
                                     .build()
                     )
                     .addEntry(generateDelayEntry(entryBuilder, "发送指令延迟", "登陆后延迟多久发送自定义指令", 6))
@@ -100,22 +115,37 @@ public class ModMenuAPIImpl implements ModMenuApi {
         };
     }
 
+    public static void setAutoConnect(boolean closeAnnouncement){
+        config.autoConnect = closeAnnouncement;
+        AutoLoginConfig.save();
+    }
+
     public static void setAnnouncement(boolean closeAnnouncement){
         config.closeAnnouncement = closeAnnouncement;
         AutoLoginConfig.save();
     }
 
-    public static void setCommandList(List<String> address) {
-        config.customCommands = address;
-        AutoLoginConfig.save();
-    }
-
-    public static void setBlacklist(List<String> address) {
+    public static void setCommandListAfterServer(List<String> address) {
         address = address.stream().map(str -> {
             String str2 = str.trim();
             if (str2.startsWith("/")) str2 = str2.substring(1);
             return str2;
         }).toList();
+        config.customCommandsAfterServer = address;
+        AutoLoginConfig.save();
+    }
+
+    public static void setCommandList(List<String> address) {
+        address = address.stream().map(str -> {
+            String str2 = str.trim();
+            if (str2.startsWith("/")) str2 = str2.substring(1);
+            return str2;
+        }).toList();
+        config.customCommands = address;
+        AutoLoginConfig.save();
+    }
+
+    public static void setBlacklist(List<String> address) {
         config.reconnectionFilter = address;
         AutoLoginConfig.save();
     }
