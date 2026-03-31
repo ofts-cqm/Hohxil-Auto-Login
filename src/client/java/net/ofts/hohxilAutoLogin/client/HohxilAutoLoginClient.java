@@ -24,6 +24,7 @@ import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.*;
 public class HohxilAutoLoginClient implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("HohxilAutoLogin");
     public static boolean shouldAutoLogin = true;
+    public static ServerInfo oldInfo = null;
 
     @Override
     public void onInitializeClient() {
@@ -167,16 +168,19 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
 
             if (!(client.currentScreen instanceof DisconnectedScreen)) return;
 
+            String address = AutoLoginConfig.get().address;
+            if (oldInfo == null){
+                oldInfo = new ServerInfo("Minecraft Server", address, ServerInfo.ServerType.OTHER);
+            }
+
             client.execute(() -> {
                 LOGGER.info("reconnecting...");
-
-                String address = AutoLoginConfig.get().address;
 
                 ConnectScreen.connect(
                         client.currentScreen,
                         client,
                         ServerAddress.parse(address),
-                        new ServerInfo("Minecraft Server", address, ServerInfo.ServerType.OTHER),
+                        oldInfo,
                         false,
                         null
                 );
