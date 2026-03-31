@@ -28,6 +28,7 @@ public class AutoLoginConfig {
     public int retryCount = 0;
     public int clickDelay = 1000;
     public int commandDelay = 500;
+    public boolean closeAnnouncement = true;
 
     public enum TargetServer {
         SURVIVAL,

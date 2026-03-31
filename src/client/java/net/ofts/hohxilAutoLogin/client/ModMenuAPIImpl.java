@@ -43,6 +43,12 @@ public class ModMenuAPIImpl implements ModMenuApi {
                                     .setTooltip(Text.literal("针对的服务器ip"))
                                     .setSaveConsumer(ModMenuAPIImpl::setAddress)
                                     .build()
+                    ).addEntry(
+                            entryBuilder.startBooleanToggle(Text.literal("自动关闭公告"), config.closeAnnouncement)
+                                    .setDefaultValue(true)
+                                    .setTooltip(Text.literal("当进入游戏后，是否自动关闭公告"))
+                                    .setSaveConsumer(ModMenuAPIImpl::setAnnouncement)
+                                    .build()
                     );
             builder.getOrCreateCategory(Text.literal("高级"))
                     .addEntry(generateDelayEntry(entryBuilder, "重连延时", "每次重连时等待的时间", 0))
@@ -92,6 +98,11 @@ public class ModMenuAPIImpl implements ModMenuApi {
             case "NONE" -> Text.literal("暂不选择");
             default -> Text.literal(raw.name());
         };
+    }
+
+    public static void setAnnouncement(boolean closeAnnouncement){
+        config.closeAnnouncement = closeAnnouncement;
+        AutoLoginConfig.save();
     }
 
     public static void setCommandList(List<String> address) {
