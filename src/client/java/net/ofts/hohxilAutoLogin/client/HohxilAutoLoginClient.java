@@ -28,12 +28,13 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        /*
         ClientPlayConnectionEvents.DISCONNECT.register(
                 (a, client) -> reconnect(client)
         );
         ClientLoginConnectionEvents.DISCONNECT.register(
                 (a, client) -> reconnect(client)
-        );
+        );*/
         ClientPlayConnectionEvents.JOIN.register(
                 (a, b, c) -> onJoin()
         );
