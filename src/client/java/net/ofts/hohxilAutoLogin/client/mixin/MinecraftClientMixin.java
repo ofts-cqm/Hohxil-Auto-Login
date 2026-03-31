@@ -33,6 +33,7 @@ public class MinecraftClientMixin {
                 for (Text text : pages){
                     if (text.getString().contains("点击查看上个公告")){
                         MinecraftClient.getInstance().setScreen(null);
+                        assert MinecraftClient.getInstance().player != null;
                         MinecraftClient.getInstance().player.sendMessage(
                                 Text.literal("已为您自动关闭公告").withColor(0x00FFFF), false
                         );
