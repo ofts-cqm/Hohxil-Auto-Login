@@ -100,6 +100,11 @@ public class ModMenuAPIImpl implements ModMenuApi {
     }
 
     public static void setBlacklist(List<String> address) {
+        address = address.stream().map(str -> {
+            String str2 = str.trim();
+            if (str2.startsWith("/")) str2 = str2.substring(1);
+            return str2;
+        }).toList();
         config.reconnectionFilter = address;
         AutoLoginConfig.save();
     }
