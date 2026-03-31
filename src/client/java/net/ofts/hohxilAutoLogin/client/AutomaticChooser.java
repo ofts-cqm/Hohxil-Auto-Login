@@ -52,6 +52,7 @@ public class AutomaticChooser {
 
         int syncId = screen.getScreenHandler().syncId;
 
+        assert client.interactionManager != null;
         client.interactionManager.clickSlot(
                 syncId,
                 slotIndex,

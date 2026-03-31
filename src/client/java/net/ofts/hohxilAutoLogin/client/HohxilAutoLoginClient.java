@@ -32,62 +32,60 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         ClientPlayConnectionEvents.JOIN.register(
                 (a, b, c) -> onJoin()
         );
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
-            dispatcher.register(
-                    literal("autologin")
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> dispatcher.register(
+                literal("autologin")
 
-                            // /autologin
-                            .executes(ctx -> {
-                                sendMessage("§e使用方法:");
-                                sendMessage("§7/autologin setpassword <密码>");
-                                sendMessage("§7/autologin chooseserver <survival|minigames|redstone|none>");
-                                return 1;
-                            })
+                        // /autologin
+                        .executes(ctx -> {
+                            sendMessage("§e使用方法:");
+                            sendMessage("§7/autologin setpassword <密码>");
+                            sendMessage("§7/autologin chooseserver <survival|minigames|redstone|none>");
+                            return 1;
+                        })
 
-                            // /autologin setpassword <password>
-                            .then(literal("setpassword")
-                                    .then(argument("password", StringArgumentType.greedyString())
-                                            .executes(HohxilAutoLoginClient::changePassword)
-                                    )
-                                    .executes(ctx -> {
-                                        sendMessage("§e使用方法: /autologin setpassword <password>");
-                                        return 1;
-                                    })
-                            )
+                        // /autologin setpassword <password>
+                        .then(literal("setpassword")
+                                .then(argument("password", StringArgumentType.greedyString())
+                                        .executes(HohxilAutoLoginClient::changePassword)
+                                )
+                                .executes(ctx -> {
+                                    sendMessage("§e使用方法: /autologin setpassword <password>");
+                                    return 1;
+                                })
+                        )
 
-                            // /autologin chooseserver <...>
-                            .then(literal("chooseserver")
-                                    .then(argument("server", StringArgumentType.word())
-                                            .suggests((ctx, builder) -> {
-                                                builder.suggest("survival");
-                                                builder.suggest("redstone");
-                                                builder.suggest("minigames");
-                                                builder.suggest("none");
-                                                return builder.buildFuture();
-                                            })
-                                            .executes(HohxilAutoLoginClient::changeServer)
-                                    )
-                                    .executes(ctx -> {
-                                        sendMessage("§e使用方法: /autologin chooseserver <survival|minigames|redstone|none>");
-                                        return 1;
-                                    })
-                            )
+                        // /autologin chooseserver <...>
+                        .then(literal("chooseserver")
+                                .then(argument("server", StringArgumentType.word())
+                                        .suggests((ctx, builder) -> {
+                                            builder.suggest("survival");
+                                            builder.suggest("redstone");
+                                            builder.suggest("minigames");
+                                            builder.suggest("none");
+                                            return builder.buildFuture();
+                                        })
+                                        .executes(HohxilAutoLoginClient::changeServer)
+                                )
+                                .executes(ctx -> {
+                                    sendMessage("§e使用方法: /autologin chooseserver <survival|minigames|redstone|none>");
+                                    return 1;
+                                })
+                        )
 
-                            .then(literal("changeaddress")
-                                    .then(argument("address", StringArgumentType.greedyString())
-                                            .suggests((context, builder) ->
-                                                    builder.suggest("cko.cc").suggest("mc.cko.cc:19999").buildFuture()
-                                            )
-                                            .executes(HohxilAutoLoginClient::changeAddress)
-                                    )
-                                    .executes(ctx -> {
-                                        sendMessage("§e使用方法: /autologin changeaddress <服务器地址>");
-                                        return 1;
-                                    })
-                            )
+                        .then(literal("changeaddress")
+                                .then(argument("address", StringArgumentType.greedyString())
+                                        .suggests((context, builder) ->
+                                                builder.suggest("cko.cc").suggest("mc.cko.cc:19999").buildFuture()
+                                        )
+                                        .executes(HohxilAutoLoginClient::changeAddress)
+                                )
+                                .executes(ctx -> {
+                                    sendMessage("§e使用方法: /autologin changeaddress <服务器地址>");
+                                    return 1;
+                                })
+                        )
 
-            );
-        });
+        ));
     }
 
     private static int changeAddress(CommandContext<FabricClientCommandSource> ctx){
@@ -144,8 +142,9 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         config.password = newPassword;
         AutoLoginConfig.save();
 
-        LOGGER.info("updated password to: " + config.password);
+        LOGGER.info("updated password to: {}", config.password);
 
+        assert MinecraftClient.getInstance().player != null;
         MinecraftClient.getInstance().player.sendMessage(
                 Text.literal("§a[可可西里自动登录] 密码更新成功！"),
                 false
