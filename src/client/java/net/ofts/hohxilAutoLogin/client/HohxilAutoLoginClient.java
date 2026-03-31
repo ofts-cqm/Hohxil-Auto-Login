@@ -5,7 +5,6 @@ import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
@@ -17,6 +16,7 @@ import net.minecraft.util.Hand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.*;
@@ -98,6 +98,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
 
         LOGGER.info("updated server address to: " + config.address);
 
+        assert MinecraftClient.getInstance().player != null;
         MinecraftClient.getInstance().player.sendMessage(
                 Text.literal("§a[可可西里自动登录] 服务器地址更新成功！"),
                 false
@@ -129,6 +130,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
     }
 
     private static void sendMessage(String s) {
+        assert MinecraftClient.getInstance().player != null;
         MinecraftClient.getInstance().player.sendMessage(
                 Text.literal(s),
                 false
@@ -224,6 +226,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 if (client.getNetworkHandler() != null) {
                     LOGGER.info("Sending password [{}]", password);
                     client.getNetworkHandler().sendChatCommand("login " + password);
+                    assert client.player != null;
                     client.player.sendMessage(Text.literal("§a[可可西里自动登录] 正在尝试登录"), false);
                 }
             });
@@ -235,7 +238,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
             client.execute(() -> {
                 LOGGER.info("Sending ({}) custom commands", config.customCommands.size());
                 for (String customCommand : config.customCommands) {
-                    client.getNetworkHandler().sendChatCommand(customCommand);
+                    Objects.requireNonNull(client.getNetworkHandler()).sendChatCommand(customCommand);
                 }
             });
 
@@ -252,6 +255,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
 
                     if (!stack.isEmpty()) {
                         client.player.getInventory().setSelectedSlot(4);
+                        assert client.interactionManager != null;
                         client.interactionManager.interactItem(client.player, Hand.MAIN_HAND);
                         flag.set(false);
                     }
