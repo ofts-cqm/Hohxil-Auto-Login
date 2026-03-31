@@ -5,13 +5,17 @@ import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
+import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.client.gui.screen.multiplayer.CodeOfConductScreen;
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
 import net.minecraft.client.network.ServerAddress;
 import net.minecraft.client.network.ServerInfo;
+import net.minecraft.client.option.ServerList;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import org.slf4j.Logger;
@@ -95,6 +99,24 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         ));
     }
 
+    public static void onLoaded(MinecraftClient client){
+        AutoLoginConfig config = AutoLoginConfig.get();
+        if (!config.autoConnect) return;
+
+        ServerList serverList = new ServerList(MinecraftClient.getInstance());
+        serverList.loadFile();
+        for (int i = 0; i < serverList.size(); i++) {
+            ServerInfo info = serverList.get(i);
+
+            if (info.address.trim().equals(config.address.trim())){
+                oldInfo = info;
+                break;
+            }
+        }
+
+        reconnect(client, true);
+    }
+
     private static int changeAddress(CommandContext<FabricClientCommandSource> ctx){
         String input = StringArgumentType.getString(ctx, "address").toLowerCase();
         AutoLoginConfig config = AutoLoginConfig.get();
@@ -160,21 +182,23 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         return 1;
     }
 
-    public static void reconnect(MinecraftClient client) {
+    public static void reconnect(MinecraftClient client, boolean force) {
         AutoLoginConfig config = AutoLoginConfig.get();
 
-        if (config.connectionRetryCount != 0 && reconnectionTried > config.connectionRetryCount) return;
+        if (!force && config.connectionRetryCount != 0 && reconnectionTried > config.connectionRetryCount) return;
 
         reconnectionTried++;
         shouldAutoLogin = true;
 
         new Thread(() -> {
-            try {
-                Thread.sleep(config.joinDelay); // 3 seconds
-            } catch (InterruptedException ignored) {
+            if (!force) {
+                try {
+                    Thread.sleep(config.joinDelay); // 3 seconds
+                } catch (InterruptedException ignored) {
+                }
             }
 
-            if (!(client.currentScreen instanceof DisconnectedScreen)) return;
+            if (!(force || client.currentScreen instanceof DisconnectedScreen)) return;
 
             String address = AutoLoginConfig.get().address;
             if (oldInfo == null){

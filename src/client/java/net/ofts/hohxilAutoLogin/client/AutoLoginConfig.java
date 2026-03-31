@@ -29,6 +29,7 @@ public class AutoLoginConfig {
     public int clickDelay = 1000;
     public int commandDelay = 500;
     public boolean closeAnnouncement = true;
+    public boolean autoConnect = false;
 
     public enum TargetServer {
         SURVIVAL,
