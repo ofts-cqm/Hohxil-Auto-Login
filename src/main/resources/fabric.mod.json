@@ -3,11 +3,15 @@
   "id": "hohxil-auto-login",
   "version": "${version}",
   "name": "Hohxil-Auto-Login",
-  "description": "",
-  "authors": [],
-  "contact": {},
+  "description": "可可西里自动登录\n作者：OFTS_CQM",
+  "authors": [ "OFTS_CQM" ],
+  "contact": {
+    "email": "qianmuchen.sam@gnail.com",
+    "issues": "https://github.com/ofts-cqm/Hohxil-Auto-Login/issues",
+    "sources": "https://github.com/ofts-cqm/Hohxil-Auto-Login"
+  },
   "license": "All-Rights-Reserved",
-  "icon": "assets/hohxil-auto-login/icon.png",
+  "icon": "icon.png",
   "environment": "client",
   "entrypoints": {
     "fabric-datagen": [
@@ -18,6 +22,9 @@
     ],
     "main": [
       "net.ofts.hohxilAutoLogin.HohxilAutoLogin"
+    ],
+    "modmenu": [
+      "net.ofts.hohxilAutoLogin.client.ModMenuAPIImpl"
     ]
   },
   "mixins": [

@@ -15,7 +15,7 @@ public class AutomaticChooser {
 
     private static void onScreen(HandledScreen<?> screen) {
         try {
-            Thread.sleep(1000); // 3 seconds
+            Thread.sleep(AutoLoginConfig.get().clickDelay); // 3 seconds
         } catch (InterruptedException ignored) {
         }
 

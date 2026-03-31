@@ -24,17 +24,11 @@ import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.*;
 public class HohxilAutoLoginClient implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("HohxilAutoLogin");
     public static boolean shouldAutoLogin = true;
+    public static int reconnectionTried = 0;
     public static ServerInfo oldInfo = null;
 
     @Override
     public void onInitializeClient() {
-        /*
-        ClientPlayConnectionEvents.DISCONNECT.register(
-                (a, client) -> reconnect(client)
-        );
-        ClientLoginConnectionEvents.DISCONNECT.register(
-                (a, client) -> reconnect(client)
-        );*/
         ClientPlayConnectionEvents.JOIN.register(
                 (a, b, c) -> onJoin()
         );
@@ -159,11 +153,16 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
     }
 
     public static void reconnect(MinecraftClient client) {
+        AutoLoginConfig config = AutoLoginConfig.get();
+
+        if (config.connectionRetryCount != 0 && reconnectionTried > config.connectionRetryCount) return;
+
+        reconnectionTried++;
         shouldAutoLogin = true;
 
         new Thread(() -> {
             try {
-                Thread.sleep(3000); // 3 seconds
+                Thread.sleep(config.joinDelay); // 3 seconds
             } catch (InterruptedException ignored) {
             }
 
@@ -190,6 +189,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
     }
 
     public static void onJoin() {
+        reconnectionTried = 0;
         if (!shouldAutoLogin) return;
 
         ServerInfo server = MinecraftClient.getInstance().getCurrentServerEntry();
@@ -202,13 +202,15 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         LOGGER.info("Server Joined, wait 1s to send login credentials");
 
         new Thread(() -> {
+            AutoLoginConfig config = AutoLoginConfig.get();
+
             try {
-                Thread.sleep(1000); // 2 seconds
+                Thread.sleep(config.loginDelay); // 2 seconds
             } catch (InterruptedException ignored) {}
 
             MinecraftClient client = MinecraftClient.getInstance();
 
-            String password = AutoLoginConfig.get().password;
+            String password = config.password;
 
             if (password.isEmpty()) {
                 LOGGER.info("Password is empty, skipping");
@@ -226,10 +228,21 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 }
             });
 
+            try {
+                Thread.sleep(config.commandDelay); // 2 seconds
+            } catch (InterruptedException ignored) {}
+
+            client.execute(() -> {
+                LOGGER.info("Sending ({}) custom commands", config.customCommands.size());
+                for (String customCommand : config.customCommands) {
+                    client.getNetworkHandler().sendChatCommand(customCommand);
+                }
+            });
+
             AtomicBoolean flag = new AtomicBoolean(true);
-            for (int i = 0; i < 20 && flag.get(); i++) { // retry for ~10 seconds
+            for (int i = 0; (config.retryCount == 0 || i < config.retryCount) && flag.get(); i++) { // retry for ~10 seconds
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(config.openMenuDelay);
                 } catch (InterruptedException ignored) {}
 
                 client.execute(() -> {
