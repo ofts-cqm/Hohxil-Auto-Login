@@ -45,8 +45,13 @@ public class ConfigScreen {
                                 .setTooltip(Text.literal("当进入游戏后，是否自动关闭公告"))
                                 .setSaveConsumer(ConfigScreen::setAnnouncement)
                                 .build()
-                )
-                .addEntry(
+                ).addEntry(
+                        entryBuilder.startBooleanToggle(Text.literal("自动欢迎新人"), config.autoGreeting)
+                                .setDefaultValue(true)
+                                .setTooltip(Text.literal("当有新人加入时，自动欢迎新人"))
+                                .setSaveConsumer(a -> config.autoGreeting = a)
+                                .build()
+                ).addEntry(
                         entryBuilder.startBooleanToggle(Text.literal("自动进入游戏"), config.autoConnect)
                                 .setDefaultValue(false)
                                 .setTooltip(Text.literal("打开游戏后自动加入服务器"))
@@ -84,8 +89,16 @@ public class ConfigScreen {
                                 .setSaveConsumer(ConfigScreen::setCommandListAfterServer)
                                 .build()
                 )
-                .addEntry(generateDelayEntry(entryBuilder, "发送指令延迟", "登陆后延迟多久发送自定义指令", 6));
+                .addEntry(generateDelayEntry(entryBuilder, "发送指令延迟", "登陆后延迟多久发送自定义指令", 6))
+                .addEntry(
+                        entryBuilder.startStrField(Text.literal("自动欢迎消息"), config.greetingMessage)
+                                .setDefaultValue("欢迎欢迎～")
+                                .setTooltip(Text.literal("如果开启自动欢迎，发送的消息"))
+                                .setSaveConsumer(a -> config.greetingMessage = a)
+                                .build()
+                );
 
+        builder.setSavingRunnable(AutoLoginConfig::save);
         return builder.build();
     }
 
@@ -111,12 +124,10 @@ public class ConfigScreen {
 
     public static void setAutoConnect(boolean closeAnnouncement){
         config.autoConnect = closeAnnouncement;
-        AutoLoginConfig.save();
     }
 
     public static void setAnnouncement(boolean closeAnnouncement){
         config.closeAnnouncement = closeAnnouncement;
-        AutoLoginConfig.save();
     }
 
     public static void setCommandListAfterServer(List<String> address) {
@@ -126,7 +137,6 @@ public class ConfigScreen {
             return str2;
         }).toList();
         config.customCommandsAfterServer = address;
-        AutoLoginConfig.save();
     }
 
     public static void setCommandList(List<String> address) {
@@ -136,26 +146,21 @@ public class ConfigScreen {
             return str2;
         }).toList();
         config.customCommands = address;
-        AutoLoginConfig.save();
     }
 
     public static void setBlacklist(List<String> address) {
         config.reconnectionFilter = address;
-        AutoLoginConfig.save();
     }
 
     public static void setAddress(String address) {
         config.address = address;
-        AutoLoginConfig.save();
     }
 
     public static void setServer(AutoLoginConfig.TargetServer targetServer) {
         config.targetServer = targetServer;
-        AutoLoginConfig.save();
     }
 
     public static void setPassword(String password) {
         config.password = password;
-        AutoLoginConfig.save();
     }
 }

@@ -31,6 +31,8 @@ public class AutoLoginConfig {
     public int commandDelay = 500;
     public boolean closeAnnouncement = true;
     public boolean autoConnect = false;
+    public boolean autoGreeting = false;
+    public String greetingMessage = "欢迎欢迎～";
 
     public enum TargetServer {
         SURVIVAL,
@@ -72,7 +74,6 @@ public class AutoLoginConfig {
                 clickDelay = delay;
                 break;
         }
-        save();
     }
 
     public int getDelay(int field) {
