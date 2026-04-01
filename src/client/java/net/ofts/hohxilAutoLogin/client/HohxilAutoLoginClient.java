@@ -5,6 +5,7 @@ import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.loader.api.FabricLoader;
@@ -44,6 +45,12 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         ClientLoginConnectionEvents.DISCONNECT.register(
                 (a, b) -> shouldAutoLogin = true
         );
+        ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
+            String msg = message.getString();
+            if (msg.contains("加入我们可可西里") && msg.contains("欢迎") && AutoLoginConfig.get().autoGreeting){
+                Objects.requireNonNull(MinecraftClient.getInstance().getNetworkHandler()).sendChatMessage(AutoLoginConfig.get().greetingMessage);
+            }
+        });
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> dispatcher.register(
                 literal("autologin")
 
