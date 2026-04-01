@@ -158,8 +158,4 @@ public class ConfigScreen {
         config.password = password;
         AutoLoginConfig.save();
     }
-
-    public static Screen fallbackScreen(Screen parent){
-        return new DependencyErrorScreen();
-    }
 }

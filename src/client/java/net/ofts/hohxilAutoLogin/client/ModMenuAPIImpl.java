@@ -8,7 +8,7 @@ public class ModMenuAPIImpl implements ModMenuApi {
     public static boolean enableAPI = true;
 
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        if (!enableAPI) return ModMenuAPIImpl::fallbackScreen;
+        /*if (!enableAPI) return ModMenuAPIImpl::fallbackScreen;
 
         return (parent) -> {
             try {
@@ -18,10 +18,11 @@ public class ModMenuAPIImpl implements ModMenuApi {
                 e.printStackTrace();
                 return null;
             }
-        };
+        };*/
+        return ModMenuAPIImpl::fallbackScreen;
     }
 
     public static Screen fallbackScreen(Screen parent){
-        return new DependencyErrorScreen();
+        return new DependencyErrorScreen(parent);
     }
 }
