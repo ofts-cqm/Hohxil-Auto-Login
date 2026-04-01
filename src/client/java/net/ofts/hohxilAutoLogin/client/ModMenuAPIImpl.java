@@ -15,8 +15,7 @@ public class ModMenuAPIImpl implements ModMenuApi {
                 Class<?> clazz = Class.forName("net.ofts.hohxilAutoLogin.client.ConfigScreen");
                 return (Screen) clazz.getMethod("getConfig", Screen.class).invoke(null, parent);
             } catch (Exception e) {
-                e.printStackTrace();
-                return null;
+                return new DependencyErrorScreen(parent);
             }
         };
     }
