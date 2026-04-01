@@ -7,8 +7,10 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
 import net.minecraft.client.network.ServerAddress;
 import net.minecraft.client.network.ServerInfo;
@@ -29,6 +31,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
     public static boolean sendAfterServerCommands = false;
     public static int reconnectionTried = 0;
     public static ServerInfo oldInfo = null;
+    public static Screen lastScreen = null;
 
     @Override
     public void onInitializeClient() {
@@ -95,6 +98,17 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                         )
 
         ));
+
+        checkDependencies();
+    }
+
+    void checkDependencies(){
+        boolean hasModMenu = FabricLoader.getInstance().isModLoaded("modmenu");
+        boolean hasClothConfig = FabricLoader.getInstance().isModLoaded("cloth-config");
+
+        if (hasModMenu && !hasClothConfig){
+            ModMenuAPIImpl.enableAPI = false;
+        }
     }
 
     public static void onLoaded(MinecraftClient client){

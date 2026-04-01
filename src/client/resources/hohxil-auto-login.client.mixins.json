@@ -4,6 +4,7 @@
   "package": "net.ofts.hohxilAutoLogin.client.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
+    "CodeOfConductScreenMixin",
     "MinecraftClientMixin",
     "MultiplayerConnectMixin"
   ],
@@ -12,5 +13,8 @@
   },
   "overwrites": {
     "requireAnnotations": true
-  }
+  },
+  "mixins": [
+    "BookScreenMixin"
+  ]
 }
