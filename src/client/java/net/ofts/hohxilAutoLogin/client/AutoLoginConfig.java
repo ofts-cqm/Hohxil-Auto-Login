@@ -32,6 +32,8 @@ public class AutoLoginConfig {
     public boolean closeAnnouncement = true;
     public boolean autoConnect = false;
     public boolean autoGreeting = true;
+    public boolean hideMenu = false;
+    public boolean autoCheckin = true;
     public String greetingMessage = "欢迎欢迎~新人记得res tp XCValkryia.Gallery，这里是服务器最大最全的地图画商店，超多地图画保证您的满意~";
 
     public enum TargetServer {

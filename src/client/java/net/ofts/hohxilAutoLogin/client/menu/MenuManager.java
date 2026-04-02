@@ -2,10 +2,16 @@ package net.ofts.hohxilAutoLogin.client.menu;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.item.Item;
+import net.minecraft.item.Items;
+import net.minecraft.screen.slot.Slot;
 import net.minecraft.util.Hand;
+import net.minecraft.util.collection.DefaultedList;
 import net.ofts.hohxilAutoLogin.client.AutoLoginConfig;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class MenuManager {
@@ -25,6 +31,11 @@ public class MenuManager {
 
     private static final AutoLoginConfig config = AutoLoginConfig.get();
 
+    public static void clearTaskQueue() {
+        Arrays.fill(taskQueue, null);
+        Arrays.fill(arrivedList, null);
+    }
+
     public static void checkMenu(int id){
         if (taskQueue[id] != null) return;
         taskQueue[id] = new Task(id);
@@ -33,7 +44,7 @@ public class MenuManager {
 
     public static synchronized boolean handleMenu(HandledScreen<?> menu){
         for (MenuHandler handler : handlers){
-            if (menu.getTitle().getString().contains(handler.menuMatcher())){
+            if (handler != null && menu.getTitle().getString().contains(handler.menuMatcher())){
                 int id = handler.id();
 
                 if (arrivedList[id] == null){
@@ -85,6 +96,8 @@ public class MenuManager {
             arrivedList[arrivedTask] = null;
 
             handlers[arrivedTask].handleMenu(menu);
+
+            if (MinecraftClient.getInstance().currentScreen == menu) MinecraftClient.getInstance().setScreen(null);
         }
     }
 
@@ -121,6 +134,35 @@ public class MenuManager {
                 (a) -> List.of(getSlotForTarget(config.targetServer)),
                 MenuManager::openServerSelectionMenu
         );
+
+        handlers[CHECK_IN] = new MenuHandler(CHECK_IN, "签到菜单",
+                (a) -> getSlotWith(a, Items.YELLOW_TERRACOTTA),
+                () -> openCommandMenu("签到")
+        );
+
+        handlers[AFK_REWARD] = new MenuHandler(AFK_REWARD, "在线奖励",
+                (a) -> getSlotWith(a, Items.EXPERIENCE_BOTTLE),
+                () -> openCommandMenu("在线奖励"));
+    }
+
+    private static List<Integer> getSlotWith(DefaultedList<Slot> inventory, Item item){
+        List<Integer> slots = new ArrayList<>();
+
+        for (int i = 0; i < inventory.size(); i++){
+            Slot slot = inventory.get(i);
+            if (slot.getStack().isOf(item)) slots.add(i);
+        }
+
+        return slots;
+    }
+
+    private static void openCommandMenu(String command){
+        MinecraftClient client = MinecraftClient.getInstance();
+        client.execute(() -> {
+            if (client.getNetworkHandler() != null) {
+                client.getNetworkHandler().sendChatCommand(command);
+            }
+        });
     }
 
     private static void openServerSelectionMenu(){
