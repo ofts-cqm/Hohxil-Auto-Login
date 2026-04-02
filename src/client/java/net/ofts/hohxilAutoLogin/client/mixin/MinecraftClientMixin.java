@@ -25,7 +25,7 @@ public class MinecraftClientMixin {
     private void onSetScreen(Screen screen, CallbackInfo ci)  {
         if (screen instanceof HandledScreen<?> handledScreen) {
             if (MenuManager.handleMenu(handledScreen) && AutoLoginConfig.get().hideMenu) {
-                MinecraftClient.getInstance().setScreen(handledScreen);
+                MinecraftClient.getInstance().setScreen(null);
                 return;
             }
         } else if (screen instanceof DisconnectedScreen disconnected) {

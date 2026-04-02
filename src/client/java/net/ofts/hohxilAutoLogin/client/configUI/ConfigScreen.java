@@ -58,6 +58,12 @@ public class ConfigScreen {
                                 .setTooltip(Text.literal("打开游戏后自动加入服务器"))
                                 .setSaveConsumer(ConfigScreen::setAutoConnect)
                                 .build()
+                ).addEntry(
+                        entryBuilder.startBooleanToggle(Text.literal("自动签到"), config.autoCheckin)
+                                .setDefaultValue(true)
+                                .setTooltip(Text.literal("进入游戏后自动签到"))
+                                .setSaveConsumer(a -> config.autoCheckin = a)
+                                .build()
                 );
         builder.getOrCreateCategory(Text.literal("高级"))
                 .addEntry(generateDelayEntry(entryBuilder, "重连延时", "每次重连时等待的时间", 0))
@@ -96,6 +102,12 @@ public class ConfigScreen {
                                 .setDefaultValue("欢迎欢迎~新人记得res tp XCValkryia.Gallery，这里是服务器最大最全的地图画商店，超多地图画保证您的满意~")
                                 .setTooltip(Text.literal("如果开启自动欢迎，发送的消息"))
                                 .setSaveConsumer(a -> config.greetingMessage = a)
+                                .build()
+                ).addEntry(
+                        entryBuilder.startBooleanToggle(Text.literal("隐藏自动菜单"), config.hideMenu)
+                                .setDefaultValue(false)
+                                .setTooltip(Text.literal("当模组执行签到，领取在线奖励，进入服务器等自动操作时，隐藏对应的箱子菜单。该选项可能会造成bug"))
+                                .setSaveConsumer(a -> config.hideMenu = a)
                                 .build()
                 );
 
