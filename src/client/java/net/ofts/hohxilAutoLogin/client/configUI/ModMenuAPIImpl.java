@@ -1,4 +1,4 @@
-package net.ofts.hohxilAutoLogin.client;
+package net.ofts.hohxilAutoLogin.client.configUI;
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
@@ -12,7 +12,7 @@ public class ModMenuAPIImpl implements ModMenuApi {
 
         return (parent) -> {
             try {
-                Class<?> clazz = Class.forName("net.ofts.hohxilAutoLogin.client.ConfigScreen");
+                Class<?> clazz = Class.forName("net.ofts.hohxilAutoLogin.client.configUI.ConfigScreen");
                 return (Screen) clazz.getMethod("getConfig", Screen.class).invoke(null, parent);
             } catch (Exception e) {
                 return new DependencyErrorScreen(parent);

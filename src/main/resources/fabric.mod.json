@@ -14,9 +14,6 @@
   "icon": "icon.png",
   "environment": "client",
   "entrypoints": {
-    "fabric-datagen": [
-      "net.ofts.hohxilAutoLogin.client.HohxilAutoLoginDataGenerator"
-    ],
     "client": [
       "net.ofts.hohxilAutoLogin.client.HohxilAutoLoginClient"
     ],
@@ -24,7 +21,7 @@
       "net.ofts.hohxilAutoLogin.HohxilAutoLogin"
     ],
     "modmenu": [
-      "net.ofts.hohxilAutoLogin.client.ModMenuAPIImpl"
+      "net.ofts.hohxilAutoLogin.client.configUI.ModMenuAPIImpl"
     ]
   },
   "mixins": [

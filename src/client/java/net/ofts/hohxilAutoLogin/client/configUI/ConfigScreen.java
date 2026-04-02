@@ -1,10 +1,11 @@
-package net.ofts.hohxilAutoLogin.client;
+package net.ofts.hohxilAutoLogin.client.configUI;
 
 import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
+import net.ofts.hohxilAutoLogin.client.AutoLoginConfig;
 
 import java.util.ArrayList;
 import java.util.List;

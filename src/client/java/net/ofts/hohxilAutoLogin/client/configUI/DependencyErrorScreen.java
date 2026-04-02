@@ -1,4 +1,4 @@
-package net.ofts.hohxilAutoLogin.client;
+package net.ofts.hohxilAutoLogin.client.configUI;
 
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;

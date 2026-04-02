@@ -11,6 +11,7 @@ import net.minecraft.text.Text;
 import net.ofts.hohxilAutoLogin.client.AutoLoginConfig;
 import net.ofts.hohxilAutoLogin.client.AutomaticChooser;
 import net.ofts.hohxilAutoLogin.client.HohxilAutoLoginClient;
+import net.ofts.hohxilAutoLogin.client.menu.MenuManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -24,7 +25,7 @@ public class MinecraftClientMixin {
     @Inject(method = "setScreen", at = @At("TAIL"))
     private void onSetScreen(Screen screen, CallbackInfo ci)  {
         if (screen instanceof HandledScreen<?> handledScreen) {
-            AutomaticChooser.choose(handledScreen);
+            if (MenuManager.handleMenu(handledScreen)) return;
         } else if (screen instanceof DisconnectedScreen disconnected) {
             if (AutoLoginConfig.get().matchBlacklist(disconnected.getTitle().getString())) return;
             HohxilAutoLoginClient.reconnect(MinecraftClient.getInstance(), false);

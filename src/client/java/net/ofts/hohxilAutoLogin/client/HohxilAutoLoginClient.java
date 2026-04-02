@@ -17,12 +17,12 @@ import net.minecraft.client.network.ServerAddress;
 import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.option.ServerList;
 import net.minecraft.text.Text;
-import net.minecraft.util.Hand;
+import net.ofts.hohxilAutoLogin.client.configUI.ModMenuAPIImpl;
+import net.ofts.hohxilAutoLogin.client.menu.MenuManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.*;
 
@@ -320,8 +320,9 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 }
             });
 
-            if (config.targetServer == AutoLoginConfig.TargetServer.NONE) return;
+            if (config.targetServer != AutoLoginConfig.TargetServer.NONE) MenuManager.checkMenu(MenuManager.SERVER_CHOOSER);
 
+            /*
             AtomicBoolean flag = new AtomicBoolean(true);
             for (int i = 0; (config.retryCount == 0 || i < config.retryCount) && flag.get(); i++) { // retry for ~10 seconds
                 try {
@@ -340,7 +341,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                         flag.set(false);
                     }
                 });
-            }
+            }*/
         }).start();
     }
 }
