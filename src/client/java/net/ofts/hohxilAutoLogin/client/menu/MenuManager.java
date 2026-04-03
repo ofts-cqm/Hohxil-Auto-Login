@@ -10,16 +10,15 @@ import net.minecraft.util.collection.DefaultedList;
 import net.ofts.hohxilAutoLogin.client.AutoLoginConfig;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class MenuManager {
     public static final int SERVER_CHOOSER = 0;
     public static final int CHECK_IN = 1;
     public static final int AFK_REWARD = 2;
+    public static final int MAIN_MENU = 3;
 
-    private static final int TYPE_COUNT = 3;
+    private static final int TYPE_COUNT = 4;
 
     private static final MenuHandler[] handlers = new MenuHandler[TYPE_COUNT];
     private static final Task[] taskQueue = new Task[TYPE_COUNT];
@@ -47,12 +46,14 @@ public class MenuManager {
             if (handler != null && menu.getTitle().getString().contains(handler.menuMatcher())){
                 int id = handler.id();
 
-                if (arrivedList[id] == null){
+                if (arrivedList[id] == null && taskQueue[id] != null){
                     arrivedList[id] = menu;
                     taskQueue[id] = null;
                     synchronized (lock) {
                         lock.notify();
                     }
+
+                    continue;
                 }
 
                 for (int i = 0; i < TYPE_COUNT; i++) {
@@ -95,9 +96,15 @@ public class MenuManager {
             HandledScreen<?> menu = arrivedList[arrivedTask];
             arrivedList[arrivedTask] = null;
 
+            try {
+                Thread.sleep(config.clickDelay);
+            } catch (InterruptedException ignored) {}
+
             handlers[arrivedTask].handleMenu(menu);
 
-            if (MinecraftClient.getInstance().currentScreen == menu) MinecraftClient.getInstance().setScreen(null);
+            MinecraftClient client = MinecraftClient.getInstance();
+
+            if (client.currentScreen == menu) client.execute(() -> client.setScreen(null));
         }
     }
 
@@ -131,32 +138,45 @@ public class MenuManager {
         worker.start();
 
         handlers[SERVER_CHOOSER] = new MenuHandler(SERVER_CHOOSER, "进入游玩",
-                (a) -> List.of(getSlotForTarget(config.targetServer)),
-                MenuManager::openServerSelectionMenu
+                (a) -> getSlotForTarget(config.targetServer),
+                MenuManager::openServerSelectionMenu,
+                MenuHandler::NOTHING
         );
 
         handlers[CHECK_IN] = new MenuHandler(CHECK_IN, "签到菜单",
                 (a) -> getSlotWith(a, Items.YELLOW_TERRACOTTA),
-                () -> openCommandMenu("签到")
+                () -> openCommandMenu("签到"),
+                MenuHandler::NOTHING
         );
 
         handlers[AFK_REWARD] = new MenuHandler(AFK_REWARD, "在线奖励",
                 (a) -> getSlotWith(a, Items.EXPERIENCE_BOTTLE),
-                () -> openCommandMenu("在线奖励"));
+                () -> openCommandMenu("zxjl"),
+                (inventory) -> {
+                    if (getSlotWith(inventory, Items.EXPERIENCE_BOTTLE) != -1)
+                        checkMenu(AFK_REWARD);
+                }
+        );
+
+        handlers[MAIN_MENU] = new MenuHandler(MAIN_MENU, "主菜单",
+                (a) -> getSlotWith(a, Items.PAPER),
+                () -> openCommandMenu("cd"),
+                (a) -> checkMenu(AFK_REWARD)
+        );
     }
 
-    private static List<Integer> getSlotWith(DefaultedList<Slot> inventory, Item item){
-        List<Integer> slots = new ArrayList<>();
-
+    private static int getSlotWith(DefaultedList<Slot> inventory, Item item){
         for (int i = 0; i < inventory.size(); i++){
             Slot slot = inventory.get(i);
-            if (slot.getStack().isOf(item)) slots.add(i);
+            if (slot.getStack().isOf(item)) return i;
         }
 
-        return slots;
+        return -1;
     }
 
     private static void openCommandMenu(String command){
+        if (command.isEmpty()) return;
+
         MinecraftClient client = MinecraftClient.getInstance();
         client.execute(() -> {
             if (client.getNetworkHandler() != null) {

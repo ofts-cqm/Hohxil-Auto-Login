@@ -334,6 +334,14 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                             sendMessage("§e使用方法: /autologin changeaddress <服务器地址>");
                             return 1;
                         })
+                )
+
+                // /autologin claim_
+                .then(literal("claim")
+                        .executes(ctx -> {
+                            MenuManager.checkMenu(MenuManager.AFK_REWARD);
+                            return 1;
+                        })
                 );
     }
 }

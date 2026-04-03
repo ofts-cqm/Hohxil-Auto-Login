@@ -2,19 +2,25 @@ package net.ofts.hohxilAutoLogin.client.menu;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.util.collection.DefaultedList;
 
-import java.util.List;
+import java.util.function.Consumer;
 
-public record MenuHandler(int id, String menuMatcher, SlotHandler slotHandler, Runnable opener) {
+public record MenuHandler(int id, String menuMatcher, SlotHandler slotHandler, Runnable opener, Consumer<DefaultedList<Slot>> callback) {
+
+    public static void NOTHING(DefaultedList<Slot> ignored) {}
 
     public void handleMenu(HandledScreen<?> screen){
-        List<Integer> slots = slotHandler.getSlots(screen.getScreenHandler().slots);
-        MinecraftClient client = MinecraftClient.getInstance();
-        int syncId = screen.getScreenHandler().syncId;
-        assert client.interactionManager != null;
+        DefaultedList<Slot> inventory = screen.getScreenHandler().slots;
 
-        for (int slot : slots){
+        int slot = slotHandler.getSlots(inventory);
+
+        if (slot != -1){
+            MinecraftClient client = MinecraftClient.getInstance();
+            int syncId = screen.getScreenHandler().syncId;
+            assert client.interactionManager != null;
 
             client.interactionManager.clickSlot(
                     syncId,
@@ -24,5 +30,7 @@ public record MenuHandler(int id, String menuMatcher, SlotHandler slotHandler, R
                     client.player
             );
         }
+
+        callback.accept(inventory);
     }
 }
