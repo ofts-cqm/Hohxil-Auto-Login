@@ -98,12 +98,13 @@ public class ConfigScreen {
                 )
                 .addEntry(generateDelayEntry(entryBuilder, "发送指令延迟", "登陆后延迟多久发送自定义指令", 6))
                 .addEntry(
-                        entryBuilder.startStrField(Text.literal("自动欢迎消息"), config.greetingMessage)
-                                .setDefaultValue("欢迎欢迎~新人记得res tp XCValkryia.Gallery，这里是服务器最大最全的地图画商店，超多地图画保证您的满意~")
+                        entryBuilder.startStrList(Text.literal("自动欢迎消息"), config.greetingMessageList)
+                                .setDefaultValue(List.of("欢迎欢迎~新人记得res tp XCValkryia.Gallery，这里是服务器最大最全的地图画商店，超多地图画保证您的满意~"))
                                 .setTooltip(Text.literal("如果开启自动欢迎，发送的消息"))
-                                .setSaveConsumer(a -> config.greetingMessage = a)
+                                .setSaveConsumer(a -> config.greetingMessageList = a)
                                 .build()
-                ).addEntry(
+                ).addEntry(generateDelayEntry(entryBuilder, "欢迎消息间隔", "每次发送消息时间隔多久", 7))
+                .addEntry(
                         entryBuilder.startBooleanToggle(Text.literal("隐藏自动菜单"), config.hideMenu)
                                 .setDefaultValue(false)
                                 .setTooltip(Text.literal("当模组执行签到，领取在线奖励，进入服务器等自动操作时，隐藏对应的箱子菜单。该选项可能会造成bug"))

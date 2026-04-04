@@ -11,6 +11,8 @@ import net.ofts.hohxilAutoLogin.client.AutoLoginConfig;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MenuManager {
     public static final int SERVER_CHOOSER = 0;
@@ -154,7 +156,12 @@ public class MenuManager {
                 () -> openCommandMenu("zxjl"),
                 (inventory) -> {
                     if (getSlotWith(inventory, Items.EXPERIENCE_BOTTLE) != -1)
-                        checkMenu(AFK_REWARD);
+                        new Timer().schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                checkMenu(AFK_REWARD);
+                            }
+                        }, 1000);
                 }
         );
 

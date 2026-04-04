@@ -29,12 +29,13 @@ public class AutoLoginConfig {
     public int retryCount = 20;
     public int clickDelay = 1000;
     public int commandDelay = 500;
+    public int greetingInterval = 2000;
     public boolean closeAnnouncement = true;
     public boolean autoConnect = false;
     public boolean autoGreeting = true;
     public boolean hideMenu = false;
     public boolean autoCheckin = true;
-    public String greetingMessage = "欢迎欢迎~新人记得res tp XCValkryia.Gallery，这里是服务器最大最全的地图画商店，超多地图画保证您的满意~";
+    public List<String> greetingMessageList = List.of("欢迎欢迎~新人记得res tp XCValkryia.Gallery，这里是服务器最大最全的地图画商店，超多地图画保证您的满意~");
 
     public enum TargetServer {
         SURVIVAL,
@@ -72,6 +73,9 @@ public class AutoLoginConfig {
             case 6:
                 commandDelay = delay;
                 break;
+            case 7:
+                greetingInterval = delay;
+                break;
             default:
                 clickDelay = delay;
                 break;
@@ -86,6 +90,7 @@ public class AutoLoginConfig {
             case 3 -> retryCount;
             case 5 -> connectionRetryCount;
             case 6 -> commandDelay;
+            case 7 -> greetingInterval;
             default -> clickDelay;
         };
     }
@@ -96,6 +101,7 @@ public class AutoLoginConfig {
             case 2, 6 -> 500;
             case 3 -> 20;
             case 5 -> 0;
+            case 7 -> 2000;
             default -> 1000;
         };
     }

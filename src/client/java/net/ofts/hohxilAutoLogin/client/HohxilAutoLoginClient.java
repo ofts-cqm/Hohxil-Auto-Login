@@ -14,6 +14,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ServerAddress;
 import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.option.ServerList;
@@ -23,8 +24,8 @@ import net.ofts.hohxilAutoLogin.client.menu.MenuManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Objects;
-
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.*;
 
 public class HohxilAutoLoginClient implements ClientModInitializer {
@@ -50,7 +51,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
             String msg = message.getString();
             if (msg.contains("加入我们可可西里") && msg.contains("欢迎") && AutoLoginConfig.get().autoGreeting){
-                Objects.requireNonNull(MinecraftClient.getInstance().getNetworkHandler()).sendChatMessage(AutoLoginConfig.get().greetingMessage);
+                handleGreeting();
             }
             if (msg.contains("你今天还没有签到") && AutoLoginConfig.get().autoCheckin){
                 MenuManager.checkMenu(MenuManager.CHECK_IN);
@@ -61,6 +62,24 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         );
 
         checkDependencies();
+    }
+
+    void handleGreeting(){
+        List<String> messages = AutoLoginConfig.get().greetingMessageList;
+        MinecraftClient client = MinecraftClient.getInstance();
+
+        new Thread(() -> {
+            for (int i = 0; i < messages.size(); i++){
+                String message = messages.get(i);
+
+                try {
+                    Thread.sleep(AutoLoginConfig.get().greetingInterval);
+                } catch (InterruptedException ignored) {}
+
+                LOGGER.info("sending message {} on thread {}", message, Thread.currentThread().getName());
+                client.execute(() -> Objects.requireNonNull(client.getNetworkHandler()).sendChatMessage(message));
+            }
+        }).start();
     }
 
     void handleDisconnection(){
