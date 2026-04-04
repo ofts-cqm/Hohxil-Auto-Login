@@ -43,33 +43,34 @@ public class MenuManager {
         taskQueue[id].open();
     }
 
+    private static void auditTask(){
+        for (int i = 0; i < TYPE_COUNT; i++) {
+            Task task = taskQueue[i];
+            if (task == null) continue;
+            if (task.time.isAfter(LocalDateTime.now().plusNanos(config.openMenuDelay * 1000L))) {
+                if (task.tried >= config.retryCount) taskQueue[i] = null;
+                else task.open();
+            }
+        }
+    }
+
     public static synchronized boolean handleMenu(HandledScreen<?> menu){
         for (MenuHandler handler : handlers){
-            if (handler != null && menu.getTitle().getString().contains(handler.menuMatcher())){
-                int id = handler.id();
+            if (handler == null || !menu.getTitle().getString().contains(handler.menuMatcher())) continue;
 
-                if (arrivedList[id] == null && taskQueue[id] != null){
-                    arrivedList[id] = menu;
-                    taskQueue[id] = null;
-                    synchronized (lock) {
-                        lock.notify();
-                    }
+            int id = handler.id();
+            auditTask();
 
-                    continue;
-                }
+            if (arrivedList[id] != null || taskQueue[id] == null) continue;
 
-                for (int i = 0; i < TYPE_COUNT; i++) {
-                    Task task = taskQueue[i];
-                    if (task == null) continue;
-                    if (task.time.isAfter(LocalDateTime.now().plusNanos(config.openMenuDelay * 1000L))) {
-                        if (task.tried >= config.retryCount){
-                            taskQueue[id] = null;
-                        } else task.open();
-                    }
-                }
+            arrivedList[id] = menu;
+            taskQueue[id] = null;
 
-                return true;
+            synchronized (lock) {
+                lock.notify();
             }
+
+            return true;
         }
 
         return false;
