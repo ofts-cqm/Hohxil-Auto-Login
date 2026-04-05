@@ -105,10 +105,20 @@ public class MenuManager {
 
             handlers[arrivedTask].handleMenu(menu);
 
-            MinecraftClient client = MinecraftClient.getInstance();
-
-            if (client.currentScreen == menu) client.execute(() -> client.setScreen(null));
+            closeMenu(menu);
         }
+    }
+
+    private static void closeMenu(HandledScreen<?> menu){
+        MinecraftClient client = MinecraftClient.getInstance();
+
+        client.execute(() -> {
+            if (config.hideMenu){
+                menu.close();
+            }else {
+                client.setScreen(null);
+            }
+        });
     }
 
     private static int getSlotForTarget(AutoLoginConfig.TargetServer target) {
