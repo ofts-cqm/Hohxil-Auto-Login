@@ -1,34 +1,34 @@
 package net.ofts.hohxilAutoLogin.client.menu;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.collection.DefaultedList;
-
 import java.util.function.Consumer;
 
-public record MenuHandler(int id, String menuMatcher, SlotHandler slotHandler, Runnable opener, Consumer<DefaultedList<Slot>> callback) {
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.core.NonNullList;
+import net.minecraft.network.HashedStack;
+import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
+import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.Slot;
 
-    public static void NOTHING(DefaultedList<Slot> ignored) {}
+public record MenuHandler(int id, String menuMatcher, SlotHandler slotHandler, Runnable opener, Consumer<NonNullList<Slot>> callback) {
 
-    public void handleMenu(HandledScreen<?> screen){
-        DefaultedList<Slot> inventory = screen.getScreenHandler().slots;
+    public static void NOTHING(NonNullList<Slot> ignored) {}
+
+    public void handleMenu(AbstractContainerScreen<?> screen){
+        NonNullList<Slot> inventory = screen.getMenu().slots;
 
         int slot = slotHandler.getSlots(inventory);
 
         if (slot != -1){
-            MinecraftClient client = MinecraftClient.getInstance();
-            int syncId = screen.getScreenHandler().syncId;
-            assert client.interactionManager != null;
+            Minecraft client = Minecraft.getInstance();
+            int syncId = screen.getMenu().containerId;
+            int stateId = screen.getMenu().getStateId();
 
-            client.interactionManager.clickSlot(
-                    syncId,
-                    slot,
-                    0, // left click
-                    SlotActionType.PICKUP,
-                    client.player
-            );
+            if (client.getConnection() == null) return;
+            HashedStack carriedItem = HashedStack.create(screen.getMenu().getCarried(), client.getConnection().decoratedHashOpsGenenerator());
+
+            client.getConnection().send(new ServerboundContainerClickPacket(syncId, stateId, (short) slot, (byte) 0, ContainerInput.PICKUP, new Int2ObjectOpenHashMap<>(), carriedItem));
         }
 
         callback.accept(inventory);

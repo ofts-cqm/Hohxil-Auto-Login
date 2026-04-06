@@ -1,11 +1,11 @@
 package net.ofts.hohxilAutoLogin.client.mixin;
 
-import net.minecraft.client.gui.screen.ingame.BookScreen;
+import net.minecraft.client.gui.screens.inventory.BookViewScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(BookScreen.class)
+@Mixin(BookViewScreen.class)
 public interface BookScreenMixin {
-    @Accessor("contents")
-    BookScreen.Contents getContents();
+    @Accessor("bookAccess")
+    BookViewScreen.BookAccess getContents();
 }

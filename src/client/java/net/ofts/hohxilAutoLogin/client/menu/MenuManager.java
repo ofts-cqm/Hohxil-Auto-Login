@@ -1,12 +1,12 @@
 package net.ofts.hohxilAutoLogin.client.menu;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.util.Hand;
-import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import net.ofts.hohxilAutoLogin.client.AutoLoginConfig;
 
 import java.time.LocalDateTime;
@@ -26,7 +26,7 @@ public class MenuManager {
 
     private static final MenuHandler[] handlers = new MenuHandler[TYPE_COUNT];
     private static final Task[] taskQueue = new Task[TYPE_COUNT];
-    private static final HandledScreen<?>[] arrivedList = new HandledScreen<?>[TYPE_COUNT];
+    private static final AbstractContainerScreen<?>[] arrivedList = new AbstractContainerScreen<?>[TYPE_COUNT];
     private static final AutoLoginConfig config = AutoLoginConfig.get();
 
     public static void clearTaskQueue() {
@@ -41,7 +41,7 @@ public class MenuManager {
     }
 
     private static void auditTask(){
-        if (MinecraftClient.getInstance().getCurrentServerEntry() == null) return;
+        if (Minecraft.getInstance().getCurrentServer() == null) return;
 
         for (int i = 0; i < TYPE_COUNT; i++) {
             Task task = taskQueue[i];
@@ -53,7 +53,7 @@ public class MenuManager {
         }
     }
 
-    public static synchronized boolean handleMenu(HandledScreen<?> menu){
+    public static synchronized boolean handleMenu(AbstractContainerScreen<?> menu){
         for (MenuHandler handler : handlers){
             if (handler == null || !menu.getTitle().getString().contains(handler.menuMatcher())) continue;
 
@@ -79,7 +79,7 @@ public class MenuManager {
     private static void thread() {
         int arrivedTask = anyArrived();
 
-        HandledScreen<?> menu = arrivedList[arrivedTask];
+        AbstractContainerScreen<?> menu = arrivedList[arrivedTask];
         arrivedList[arrivedTask] = null;
 
         try {
@@ -91,12 +91,12 @@ public class MenuManager {
         closeMenu(menu);
     }
 
-    private static void closeMenu(HandledScreen<?> menu){
-        MinecraftClient client = MinecraftClient.getInstance();
+    private static void closeMenu(AbstractContainerScreen<?> menu){
+        Minecraft client = Minecraft.getInstance();
 
         client.execute(() -> {
             if (config.hideMenu){
-                menu.close();
+                menu.onClose();
             }else {
                 client.setScreen(null);
             }
@@ -132,7 +132,7 @@ public class MenuManager {
         Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(MenuManager::auditTask, 0, config.openMenuDelay, TimeUnit.MILLISECONDS);
 
         handlers[SERVER_CHOOSER] = new MenuHandler(SERVER_CHOOSER, "进入游玩",
-                (a) -> getSlotForTarget(config.targetServer),
+                (_) -> getSlotForTarget(config.targetServer),
                 MenuManager::openServerSelectionMenu,
                 MenuHandler::NOTHING
         );
@@ -160,14 +160,14 @@ public class MenuManager {
         handlers[MAIN_MENU] = new MenuHandler(MAIN_MENU, "主菜单",
                 (a) -> getSlotWith(a, Items.PAPER),
                 () -> openCommandMenu("cd"),
-                (a) -> checkMenu(AFK_REWARD)
+                (_) -> checkMenu(AFK_REWARD)
         );
     }
 
-    private static int getSlotWith(DefaultedList<Slot> inventory, Item item){
+    private static int getSlotWith(NonNullList<Slot> inventory, Item item){
         for (int i = 0; i < inventory.size(); i++){
             Slot slot = inventory.get(i);
-            if (slot.getStack().isOf(item)) return i;
+            if (slot.getItem().is(item)) return i;
         }
 
         return -1;
@@ -176,25 +176,25 @@ public class MenuManager {
     private static void openCommandMenu(String command){
         if (command.isEmpty()) return;
 
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         client.execute(() -> {
-            if (client.getNetworkHandler() != null) {
-                client.getNetworkHandler().sendChatCommand(command);
+            if (client.getConnection() != null) {
+                client.getConnection().sendCommand(command);
             }
         });
     }
 
     private static void openServerSelectionMenu(){
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         client.execute(() -> {
             if (client.player == null) return;
 
-            var stack = client.player.getInventory().getStack(4);
+            var stack = client.player.getInventory().getItem(4);
 
             if (!stack.isEmpty()) {
                 client.player.getInventory().setSelectedSlot(4);
-                assert client.interactionManager != null;
-                client.interactionManager.interactItem(client.player, Hand.MAIN_HAND);
+                assert client.gameMode != null;
+                client.gameMode.useItem(client.player, InteractionHand.MAIN_HAND);
             }
         });
     }
