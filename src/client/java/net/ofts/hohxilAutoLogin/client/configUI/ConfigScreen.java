@@ -9,6 +9,7 @@ import net.ofts.hohxilAutoLogin.client.AutoLoginConfig;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class ConfigScreen {
     private static final AutoLoginConfig config = AutoLoginConfig.get();
@@ -103,17 +104,54 @@ public class ConfigScreen {
                                 .setTooltip(Text.literal("如果开启自动欢迎，发送的消息"))
                                 .setSaveConsumer(a -> config.greetingMessageList = a)
                                 .build()
-                ).addEntry(generateDelayEntry(entryBuilder, "欢迎消息间隔", "每次发送消息时间隔多久", 7))
+                )
+                .addEntry(generateDelayEntry(entryBuilder, "欢迎消息间隔", "每次发送消息时间隔多久", 7))
                 .addEntry(
                         entryBuilder.startBooleanToggle(Text.literal("隐藏自动菜单"), config.hideMenu)
                                 .setDefaultValue(false)
                                 .setTooltip(Text.literal("当模组执行签到，领取在线奖励，进入服务器等自动操作时，隐藏对应的箱子菜单。该选项可能会造成bug"))
                                 .setSaveConsumer(a -> config.hideMenu = a)
                                 .build()
+                )
+                .addEntry(
+                        entryBuilder
+                                .startEnumSelector(
+                                    Text.literal("欢迎消息发送方法"), GreetingType.class, GreetingType.from(config.sequential)
+                                )
+                                .setDefaultValue(GreetingType.SEQUENTIAL)
+                                .setSaveConsumer(a -> config.sequential = a.value)
+                                .setTooltipSupplier(ConfigScreen::getGreetingTooltip)
+                                .setEnumNameProvider(ConfigScreen::getGreetingMethodName)
+                                .build()
                 );
 
         builder.setSavingRunnable(AutoLoginConfig::save);
         return builder.build();
+    }
+
+    private static Text getGreetingMethodName(Enum<GreetingType> val){
+        return Text.literal(val.name().equals("SEQUENTIAL") ? "顺序发送" : "随机发送");
+    }
+
+    private static Optional<Text[]> getGreetingTooltip(GreetingType type){
+        return Optional.of(new Text[]{ Text.of(
+                type.value ? "每次按顺序发送列表内全部内容" : "每次随机从列表内提取一条发送"
+        )});
+    }
+
+    public enum GreetingType{
+        SEQUENTIAL(true),
+        RANDOM(false);
+
+        GreetingType(boolean value) {
+            this.value = value;
+        }
+
+        static GreetingType from(boolean value){
+            return value ? SEQUENTIAL : RANDOM;
+        }
+
+        final boolean value;
     }
 
     public static AbstractConfigListEntry<Integer> generateDelayEntry(ConfigEntryBuilder entryBuilder, String text, String tooltip, int index){

@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class MenuManager {
     public static final int SERVER_CHOOSER = 0;
@@ -25,11 +27,6 @@ public class MenuManager {
     private static final MenuHandler[] handlers = new MenuHandler[TYPE_COUNT];
     private static final Task[] taskQueue = new Task[TYPE_COUNT];
     private static final HandledScreen<?>[] arrivedList = new HandledScreen<?>[TYPE_COUNT];
-    private static final Thread worker;
-    private static final MenuManager instance = new MenuManager();
-
-    private static final Object lock = new Object();
-
     private static final AutoLoginConfig config = AutoLoginConfig.get();
 
     public static void clearTaskQueue() {
@@ -44,6 +41,8 @@ public class MenuManager {
     }
 
     private static void auditTask(){
+        if (MinecraftClient.getInstance().getCurrentServerEntry() == null) return;
+
         for (int i = 0; i < TYPE_COUNT; i++) {
             Task task = taskQueue[i];
             if (task == null) continue;
@@ -59,54 +58,37 @@ public class MenuManager {
             if (handler == null || !menu.getTitle().getString().contains(handler.menuMatcher())) continue;
 
             int id = handler.id();
-            auditTask();
-
             if (arrivedList[id] != null || taskQueue[id] == null) continue;
-
             arrivedList[id] = menu;
             taskQueue[id] = null;
 
-            synchronized (lock) {
-                lock.notify();
-            }
-
+            new Thread(MenuManager::thread).start();
             return true;
         }
 
         return false;
     }
 
-    private int anyArrived(){
+    private static int anyArrived(){
         for (int i = 0; i < arrivedList.length; i++){
             if (arrivedList[i] != null) return i;
         }
         return -1;
     }
 
-    private void thread() {
-        while (true){
-            int arrivedTask = anyArrived();
+    private static void thread() {
+        int arrivedTask = anyArrived();
 
-            try {
-                while (arrivedTask == -1){
-                    synchronized (lock) {
-                        lock.wait(); // Thread now owns the monitor of 'lock'
-                    }
-                    arrivedTask = anyArrived();
-                }
-            } catch (InterruptedException ignored) {}
+        HandledScreen<?> menu = arrivedList[arrivedTask];
+        arrivedList[arrivedTask] = null;
 
-            HandledScreen<?> menu = arrivedList[arrivedTask];
-            arrivedList[arrivedTask] = null;
+        try {
+            Thread.sleep(config.clickDelay);
+        } catch (InterruptedException ignored) {}
 
-            try {
-                Thread.sleep(config.clickDelay);
-            } catch (InterruptedException ignored) {}
+        handlers[arrivedTask].handleMenu(menu);
 
-            handlers[arrivedTask].handleMenu(menu);
-
-            closeMenu(menu);
-        }
+        closeMenu(menu);
     }
 
     private static void closeMenu(HandledScreen<?> menu){
@@ -147,8 +129,7 @@ public class MenuManager {
     }
 
     static {
-        worker = new Thread(instance::thread);
-        worker.start();
+        Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(MenuManager::auditTask, 0, config.openMenuDelay, TimeUnit.MILLISECONDS);
 
         handlers[SERVER_CHOOSER] = new MenuHandler(SERVER_CHOOSER, "进入游玩",
                 (a) -> getSlotForTarget(config.targetServer),

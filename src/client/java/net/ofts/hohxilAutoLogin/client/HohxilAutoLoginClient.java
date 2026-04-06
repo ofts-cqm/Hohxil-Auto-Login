@@ -17,6 +17,7 @@ import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
 import net.minecraft.client.network.ServerAddress;
 import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.option.ServerList;
+import net.minecraft.scoreboard.*;
 import net.minecraft.text.Text;
 import net.ofts.hohxilAutoLogin.client.configUI.ModMenuAPIImpl;
 import net.ofts.hohxilAutoLogin.client.menu.MenuManager;
@@ -25,6 +26,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
+
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.*;
 
 public class HohxilAutoLoginClient implements ClientModInitializer {
@@ -60,14 +63,47 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 (dispatcher, registryAccess) -> dispatcher.register(command)
         );
 
+        //new Thread(HohxilAutoLoginClient::checkPlaytimeReward).start();
+        //Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(HohxilAutoLoginClient::checkPlaytimeReward, 0, 3, TimeUnit.SECONDS);
+
         checkDependencies();
     }
+/*
+    public static void log(String str){
+        LOGGER.info(str);
+    }
+
+    static boolean isInSurvivalServer(){
+        MinecraftClient client = MinecraftClient.getInstance();
+        ServerInfo info = client.getCurrentServerEntry();
+        if (info == null || !Objects.equals(info.address, AutoLoginConfig.get().address) || client.world == null) return false;
+
+        Scoreboard scoreboard = client.world.getScoreboard();
+
+        return false;
+    }
+
+    static void checkPlaytimeReward(){
+        isInSurvivalServer();
+    }*/
 
     void handleGreeting(){
         List<String> messages = AutoLoginConfig.get().greetingMessageList;
+        boolean sequential = AutoLoginConfig.get().sequential;
         MinecraftClient client = MinecraftClient.getInstance();
 
         new Thread(() -> {
+            if (!sequential){
+                if (messages.isEmpty()) return;
+
+                Random rand = new Random();
+                String message =  messages.get(rand.nextInt(messages.size()));
+
+                LOGGER.info("sending message {} on thread {}", message, Thread.currentThread().getName());
+                client.execute(() -> Objects.requireNonNull(client.getNetworkHandler()).sendChatMessage(message));
+                return;
+            }
+
             for (int i = 0; i < messages.size(); i++){
                 String message = messages.get(i);
 
