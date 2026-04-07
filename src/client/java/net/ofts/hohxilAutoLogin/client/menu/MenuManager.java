@@ -21,8 +21,9 @@ public class MenuManager {
     public static final int CHECK_IN = 1;
     public static final int AFK_REWARD = 2;
     public static final int MAIN_MENU = 3;
+    public static final int REFRESH_TITLE = 4;
 
-    private static final int TYPE_COUNT = 4;
+    private static final int TYPE_COUNT = 5;
 
     private static final MenuHandler[] handlers = new MenuHandler[TYPE_COUNT];
     private static final Task[] taskQueue = new Task[TYPE_COUNT];
@@ -134,13 +135,15 @@ public class MenuManager {
         handlers[SERVER_CHOOSER] = new MenuHandler(SERVER_CHOOSER, "进入游玩",
                 (_) -> getSlotForTarget(config.targetServer),
                 MenuManager::openServerSelectionMenu,
-                MenuHandler::NOTHING
+                MenuHandler::NOTHING,
+                false
         );
 
         handlers[CHECK_IN] = new MenuHandler(CHECK_IN, "签到菜单",
                 (a) -> getSlotWith(a, Items.YELLOW_TERRACOTTA),
                 () -> openCommandMenu("签到"),
-                MenuHandler::NOTHING
+                MenuHandler::NOTHING,
+                false
         );
 
         handlers[AFK_REWARD] = new MenuHandler(AFK_REWARD, "在线奖励",
@@ -154,14 +157,32 @@ public class MenuManager {
                                 checkMenu(AFK_REWARD);
                             }
                         }, 1000);
-                }
+                },
+                false
         );
 
         handlers[MAIN_MENU] = new MenuHandler(MAIN_MENU, "主菜单",
                 (a) -> getSlotWith(a, Items.PAPER),
                 () -> openCommandMenu("cd"),
-                (_) -> checkMenu(AFK_REWARD)
+                (_) -> checkMenu(AFK_REWARD),
+                false
         );
+
+        handlers[REFRESH_TITLE] = new MenuHandler(REFRESH_TITLE, "称号仓库",
+                (a) -> getSlotNamed(a, config.titleToRefresh),
+                () -> openCommandMenu("ch"),
+                MenuHandler::NOTHING,
+                true
+        );
+    }
+
+    private static int getSlotNamed(NonNullList<Slot> inventory, String name){
+        for (int i = 0; i < inventory.size(); i++){
+            Slot slot = inventory.get(i);
+            if (slot.getItem().getDisplayName().getString().contains(name)) return i;
+        }
+
+        return -1;
     }
 
     private static int getSlotWith(NonNullList<Slot> inventory, Item item){

@@ -18,6 +18,7 @@ public class AutoLoginConfig {
 
     public String password = "";
     public String address = "cko.cc";
+    public String titleToRefresh = "";
     public TargetServer targetServer = TargetServer.SURVIVAL;
     public int connectionRetryCount = 0;
     public List<String> reconnectionFilter = new ArrayList<>();
@@ -37,6 +38,7 @@ public class AutoLoginConfig {
     public boolean hideMenu = false;
     public boolean autoCheckin = true;
     public boolean sequential = true;
+    public boolean refreshTitle = false;
     public List<String> greetingMessageList = List.of("欢迎欢迎~新人记得res tp XCValkryia.Gallery，这里是服务器最大最全的地图画商店，超多地图画保证您的满意~");
 
     public enum TargetServer {
