@@ -8,7 +8,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.HashedStack;
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
-import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 
 public record MenuHandler(int id, String menuMatcher, SlotHandler slotHandler, Runnable opener, Consumer<NonNullList<Slot>> callback) {
@@ -28,7 +28,7 @@ public record MenuHandler(int id, String menuMatcher, SlotHandler slotHandler, R
             if (client.getConnection() == null) return;
             HashedStack carriedItem = HashedStack.create(screen.getMenu().getCarried(), client.getConnection().decoratedHashOpsGenenerator());
 
-            client.getConnection().send(new ServerboundContainerClickPacket(syncId, stateId, (short) slot, (byte) 0, ContainerInput.PICKUP, new Int2ObjectOpenHashMap<>(), carriedItem));
+            client.getConnection().send(new ServerboundContainerClickPacket(syncId, stateId, (short) slot, (byte) 0, ClickType.PICKUP, new Int2ObjectOpenHashMap<>(), carriedItem));
         }
 
         callback.accept(inventory);

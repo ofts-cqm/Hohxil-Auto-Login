@@ -136,7 +136,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         LOGGER.info("updated server address to: " + config.address);
 
         assert Minecraft.getInstance().player != null;
-        Minecraft.getInstance().player.sendSystemMessage(Component.literal("§a[可可西里自动登录] 服务器地址更新成功！"));
+        Minecraft.getInstance().player.displayClientMessage(Component.literal("§a[可可西里自动登录] 服务器地址更新成功！"), false);
 
         return 1;
     }
@@ -165,7 +165,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
 
     private static void sendMessage(String s) {
         assert Minecraft.getInstance().player != null;
-        Minecraft.getInstance().player.sendSystemMessage(Component.literal(s));
+        Minecraft.getInstance().player.displayClientMessage(Component.literal(s), false);
     }
 
     public static int changePassword(CommandContext<FabricClientCommandSource> ctx){
@@ -178,7 +178,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         LOGGER.info("updated password to: {}", config.password);
 
         assert Minecraft.getInstance().player != null;
-        Minecraft.getInstance().player.sendSystemMessage(Component.literal("§a[可可西里自动登录] 密码更新成功！"));
+        Minecraft.getInstance().player.displayClientMessage(Component.literal("§a[可可西里自动登录] 密码更新成功！"), false);
 
         return 1;
     }
@@ -277,7 +277,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 LOGGER.info("Password is empty, skipping");
 
                 assert client.player != null;
-                client.execute(() -> client.player.sendSystemMessage(Component.literal("§a[可可西里自动登录] 警告：您未设置登录密码。使用/autologin setpassword <密码> 设置登录密码")));
+                client.execute(() -> client.player.displayClientMessage(Component.literal("§a[可可西里自动登录] 警告：您未设置登录密码。使用/autologin setpassword <密码> 设置登录密码"), false));
                 return;
             }
 
@@ -286,7 +286,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                     LOGGER.info("Sending password [{}]", password);
                     client.getConnection().sendCommand("login " + password);
                     assert client.player != null;
-                    client.player.sendSystemMessage(Component.literal("§a[可可西里自动登录] 正在尝试登录"));
+                    client.player.displayClientMessage(Component.literal("§a[可可西里自动登录] 正在尝试登录"), false);
                 }
             });
 

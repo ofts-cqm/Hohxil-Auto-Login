@@ -40,7 +40,7 @@ public class MinecraftClientMixin {
             for (Component text : ((BookScreenMixin) bookScreen).getContents().pages()){
                 if (text.getString().contains("点击查看上个公告")){
                     assert Minecraft.getInstance().player != null;
-                    Minecraft.getInstance().player.sendSystemMessage(Component.literal("已为您自动关闭公告").withColor(0x00FFFF));
+                    Minecraft.getInstance().player.displayClientMessage(Component.literal("已为您自动关闭公告").withColor(0x00FFFF), false);
                     ci.cancel();
                     return;
                 }
