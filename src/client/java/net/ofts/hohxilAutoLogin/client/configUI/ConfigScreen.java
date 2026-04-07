@@ -41,29 +41,40 @@ public class ConfigScreen {
                                 .setTooltip(Component.literal("针对的服务器ip"))
                                 .setSaveConsumer(ConfigScreen::setAddress)
                                 .build()
-                ).addEntry(
+                )
+                .addEntry(
                         entryBuilder.startBooleanToggle(Component.literal("自动关闭公告"), config.closeAnnouncement)
                                 .setDefaultValue(true)
                                 .setTooltip(Component.literal("当进入游戏后，是否自动关闭公告"))
                                 .setSaveConsumer(ConfigScreen::setAnnouncement)
                                 .build()
-                ).addEntry(
+                )
+                .addEntry(
                         entryBuilder.startBooleanToggle(Component.literal("自动欢迎新人"), config.autoGreeting)
                                 .setDefaultValue(true)
                                 .setTooltip(Component.literal("当有新人加入时，自动欢迎新人"))
                                 .setSaveConsumer(a -> config.autoGreeting = a)
                                 .build()
-                ).addEntry(
+                )
+                .addEntry(
                         entryBuilder.startBooleanToggle(Component.literal("自动进入游戏"), config.autoConnect)
                                 .setDefaultValue(false)
                                 .setTooltip(Component.literal("打开游戏后自动加入服务器"))
                                 .setSaveConsumer(ConfigScreen::setAutoConnect)
                                 .build()
-                ).addEntry(
+                )
+                .addEntry(
                         entryBuilder.startBooleanToggle(Component.literal("自动签到"), config.autoCheckin)
                                 .setDefaultValue(true)
                                 .setTooltip(Component.literal("进入游戏后自动签到"))
                                 .setSaveConsumer(a -> config.autoCheckin = a)
+                                .build()
+                )
+                .addEntry(
+                        entryBuilder.startBooleanToggle(Component.literal("自动续称号"), config.refreshTitle)
+                                .setDefaultValue(false)
+                                .setTooltip(Component.literal("是否在登录后自动续称号"))
+                                .setSaveConsumer(a -> config.refreshTitle = a)
                                 .build()
                 );
         builder.getOrCreateCategory(Component.literal("高级"))
@@ -114,14 +125,20 @@ public class ConfigScreen {
                                 .build()
                 )
                 .addEntry(
-                        entryBuilder
-                                .startEnumSelector(
+                        entryBuilder.startEnumSelector(
                                     Component.literal("欢迎消息发送方法"), GreetingType.class, GreetingType.from(config.sequential)
                                 )
                                 .setDefaultValue(GreetingType.SEQUENTIAL)
                                 .setSaveConsumer(a -> config.sequential = a.value)
                                 .setTooltipSupplier(ConfigScreen::getGreetingTooltip)
                                 .setEnumNameProvider(ConfigScreen::getGreetingMethodName)
+                                .build()
+                )
+                .addEntry(
+                        entryBuilder.startStrField(Component.literal("称号名称"), config.titleToRefresh)
+                                .setDefaultValue("")
+                                .setTooltip(Component.literal("登录后自动续的称号"))
+                                .setSaveConsumer(a -> config.titleToRefresh = a)
                                 .build()
                 );
 

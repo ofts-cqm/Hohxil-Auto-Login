@@ -246,10 +246,27 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                     }
                 });
 
+                if (!config.refreshTitle) return;
+                if (config.titleToRefresh.isEmpty()) {
+                    client.execute(() -> {
+                        assert client.player != null;
+                        client.player.displayClientMessage(Component.literal("§a[可可西里自动登录] 您未设置自动刷新的称号！"), false);
+                    });
+                    return;
+                }
+
+                try {
+                    Thread.sleep(config.commandDelay); // 2 seconds
+                } catch (InterruptedException ignored) {
+                }
+
+                MenuManager.checkMenu(MenuManager.REFRESH_TITLE);
             }).start();
 
             return;
         }
+
+        sendAfterServerCommands = true;
 
         if (!shouldAutoLogin) return;
 
