@@ -1,9 +1,9 @@
 package net.ofts.hohxilAutoLogin.client.menu;
 
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.inventory.Slot;
 
 @FunctionalInterface
 public interface SlotHandler {
-    int getSlots(DefaultedList<Slot> inventory);
+    int getSlots(NonNullList<Slot> inventory);
 }

@@ -10,15 +10,14 @@ import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.DisconnectedScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
-import net.minecraft.client.network.ServerAddress;
-import net.minecraft.client.network.ServerInfo;
-import net.minecraft.client.option.ServerList;
-import net.minecraft.scoreboard.*;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.ConnectScreen;
+import net.minecraft.client.gui.screens.DisconnectedScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.multiplayer.ServerList;
+import net.minecraft.client.multiplayer.resolver.ServerAddress;
+import net.minecraft.network.chat.Component;
 import net.ofts.hohxilAutoLogin.client.configUI.ModMenuAPIImpl;
 import net.ofts.hohxilAutoLogin.client.menu.MenuManager;
 import org.slf4j.Logger;
@@ -28,29 +27,29 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.*;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 
 public class HohxilAutoLoginClient implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("HohxilAutoLogin");
     public static boolean shouldAutoLogin = true;
     public static boolean sendAfterServerCommands = false;
     public static int reconnectionTried = 0;
-    public static ServerInfo oldInfo = null;
+    public static ServerData oldInfo = null;
     public static Screen lastScreen = null;
     public static final LiteralArgumentBuilder<FabricClientCommandSource> command;
 
     @Override
     public void onInitializeClient() {
         ClientPlayConnectionEvents.JOIN.register(
-                (a, b, c) -> onJoin()
+                (_, _, _) -> onJoin()
         );
         ClientPlayConnectionEvents.DISCONNECT.register(
-                (a, b) -> handleDisconnection()
+                (_, _) -> handleDisconnection()
         );
         ClientLoginConnectionEvents.DISCONNECT.register(
-                (a, b) -> handleDisconnection()
+                (_, _) -> handleDisconnection()
         );
-        ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
+        ClientReceiveMessageEvents.GAME.register((message, _) -> {
             String msg = message.getString();
             if (msg.contains("加入我们可可西里") && msg.contains("欢迎") && AutoLoginConfig.get().autoGreeting){
                 handleGreeting();
@@ -60,37 +59,16 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
             }
         });
         ClientCommandRegistrationCallback.EVENT.register(
-                (dispatcher, registryAccess) -> dispatcher.register(command)
+                (dispatcher, _) -> dispatcher.register(command)
         );
-
-        //new Thread(HohxilAutoLoginClient::checkPlaytimeReward).start();
-        //Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(HohxilAutoLoginClient::checkPlaytimeReward, 0, 3, TimeUnit.SECONDS);
 
         checkDependencies();
     }
-/*
-    public static void log(String str){
-        LOGGER.info(str);
-    }
-
-    static boolean isInSurvivalServer(){
-        MinecraftClient client = MinecraftClient.getInstance();
-        ServerInfo info = client.getCurrentServerEntry();
-        if (info == null || !Objects.equals(info.address, AutoLoginConfig.get().address) || client.world == null) return false;
-
-        Scoreboard scoreboard = client.world.getScoreboard();
-
-        return false;
-    }
-
-    static void checkPlaytimeReward(){
-        isInSurvivalServer();
-    }*/
 
     void handleGreeting(){
         List<String> messages = AutoLoginConfig.get().greetingMessageList;
         boolean sequential = AutoLoginConfig.get().sequential;
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
 
         new Thread(() -> {
             if (!sequential){
@@ -100,7 +78,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 String message =  messages.get(rand.nextInt(messages.size()));
 
                 LOGGER.info("sending message {} on thread {}", message, Thread.currentThread().getName());
-                client.execute(() -> Objects.requireNonNull(client.getNetworkHandler()).sendChatMessage(message));
+                client.execute(() -> Objects.requireNonNull(client.getConnection()).sendChat(message));
                 return;
             }
 
@@ -112,7 +90,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 } catch (InterruptedException ignored) {}
 
                 LOGGER.info("sending message {} on thread {}", message, Thread.currentThread().getName());
-                client.execute(() -> Objects.requireNonNull(client.getNetworkHandler()).sendChatMessage(message));
+                client.execute(() -> Objects.requireNonNull(client.getConnection()).sendChat(message));
             }
         }).start();
     }
@@ -131,16 +109,16 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         }
     }
 
-    public static void onLoaded(MinecraftClient client){
+    public static void onLoaded(Minecraft client){
         AutoLoginConfig config = AutoLoginConfig.get();
         if (!config.autoConnect) return;
 
-        ServerList serverList = new ServerList(MinecraftClient.getInstance());
-        serverList.loadFile();
+        ServerList serverList = new ServerList(Minecraft.getInstance());
+        serverList.load();
         for (int i = 0; i < serverList.size(); i++) {
-            ServerInfo info = serverList.get(i);
+            ServerData info = serverList.get(i);
 
-            if (info.address.trim().equals(config.address.trim())){
+            if (info.ip.trim().equals(config.address.trim())){
                 oldInfo = info;
                 break;
             }
@@ -157,11 +135,8 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
 
         LOGGER.info("updated server address to: " + config.address);
 
-        assert MinecraftClient.getInstance().player != null;
-        MinecraftClient.getInstance().player.sendMessage(
-                Text.literal("§a[可可西里自动登录] 服务器地址更新成功！"),
-                false
-        );
+        assert Minecraft.getInstance().player != null;
+        Minecraft.getInstance().player.sendSystemMessage(Component.literal("§a[可可西里自动登录] 服务器地址更新成功！"));
 
         return 1;
     }
@@ -189,11 +164,8 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
     }
 
     private static void sendMessage(String s) {
-        assert MinecraftClient.getInstance().player != null;
-        MinecraftClient.getInstance().player.sendMessage(
-                Text.literal(s),
-                false
-        );
+        assert Minecraft.getInstance().player != null;
+        Minecraft.getInstance().player.sendSystemMessage(Component.literal(s));
     }
 
     public static int changePassword(CommandContext<FabricClientCommandSource> ctx){
@@ -205,16 +177,13 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
 
         LOGGER.info("updated password to: {}", config.password);
 
-        assert MinecraftClient.getInstance().player != null;
-        MinecraftClient.getInstance().player.sendMessage(
-                Text.literal("§a[可可西里自动登录] 密码更新成功！"),
-                false
-        );
+        assert Minecraft.getInstance().player != null;
+        Minecraft.getInstance().player.sendSystemMessage(Component.literal("§a[可可西里自动登录] 密码更新成功！"));
 
         return 1;
     }
 
-    public static void reconnect(MinecraftClient client, boolean force) {
+    public static void reconnect(Minecraft client, boolean force) {
         AutoLoginConfig config = AutoLoginConfig.get();
 
         if (!force && config.connectionRetryCount != 0 && reconnectionTried > config.connectionRetryCount) return;
@@ -231,20 +200,20 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 }
             }
 
-            if (!(force || client.currentScreen instanceof DisconnectedScreen)) return;
+            if (!(force || client.screen instanceof DisconnectedScreen)) return;
 
             String address = AutoLoginConfig.get().address;
             if (oldInfo == null){
-                oldInfo = new ServerInfo("Minecraft Server", address, ServerInfo.ServerType.OTHER);
+                oldInfo = new ServerData("Minecraft Server", address, ServerData.Type.OTHER);
             }
 
             client.execute(() -> {
                 LOGGER.info("reconnecting...");
 
-                ConnectScreen.connect(
-                        client.currentScreen,
+                ConnectScreen.startConnecting(
+                        client.screen,
                         client,
-                        ServerAddress.parse(address),
+                        ServerAddress.parseString(address),
                         oldInfo,
                         false,
                         null
@@ -267,13 +236,13 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 } catch (InterruptedException ignored) {
                 }
 
-                MinecraftClient client = MinecraftClient.getInstance();
+                Minecraft client = Minecraft.getInstance();
 
                 client.execute(() -> {
                     LOGGER.info("Sending ({}) custom commands after joining server", config.customCommandsAfterServer.size());
                     for (String customCommand : config.customCommandsAfterServer) {
-                        Objects.requireNonNull(client.getNetworkHandler())
-                                .sendChatCommand(customCommand);
+                        Objects.requireNonNull(client.getConnection())
+                                .sendCommand(customCommand);
                     }
                 });
 
@@ -284,9 +253,9 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
 
         if (!shouldAutoLogin) return;
 
-        ServerInfo server = MinecraftClient.getInstance().getCurrentServerEntry();
+        ServerData server = Minecraft.getInstance().getCurrentServer();
 
-        if (server == null || !server.address.equals(AutoLoginConfig.get().address)) {
+        if (server == null || !server.ip.equals(AutoLoginConfig.get().address)) {
             return;
         }
 
@@ -300,7 +269,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 Thread.sleep(config.loginDelay); // 2 seconds
             } catch (InterruptedException ignored) {}
 
-            MinecraftClient client = MinecraftClient.getInstance();
+            Minecraft client = Minecraft.getInstance();
 
             String password = config.password;
 
@@ -308,16 +277,16 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 LOGGER.info("Password is empty, skipping");
 
                 assert client.player != null;
-                client.execute(() -> client.player.sendMessage(Text.literal("§a[可可西里自动登录] 警告：您未设置登录密码。使用/autologin setpassword <密码> 设置登录密码"), false));
+                client.execute(() -> client.player.sendSystemMessage(Component.literal("§a[可可西里自动登录] 警告：您未设置登录密码。使用/autologin setpassword <密码> 设置登录密码")));
                 return;
             }
 
             client.execute(() -> {
-                if (client.getNetworkHandler() != null) {
+                if (client.getConnection() != null) {
                     LOGGER.info("Sending password [{}]", password);
-                    client.getNetworkHandler().sendChatCommand("login " + password);
+                    client.getConnection().sendCommand("login " + password);
                     assert client.player != null;
-                    client.player.sendMessage(Text.literal("§a[可可西里自动登录] 正在尝试登录"), false);
+                    client.player.sendSystemMessage(Component.literal("§a[可可西里自动登录] 正在尝试登录"));
                 }
             });
 
@@ -328,8 +297,8 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
             client.execute(() -> {
                 LOGGER.info("Sending ({}) custom commands", config.customCommands.size());
                 for (String customCommand : config.customCommands) {
-                    Objects.requireNonNull(client.getNetworkHandler())
-                            .sendChatCommand(customCommand);
+                    Objects.requireNonNull(client.getConnection())
+                            .sendCommand(customCommand);
                 }
             });
 
@@ -338,10 +307,10 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
     }
 
     static {
-        command = literal("autologin")
+        command = LiteralArgumentBuilder.<FabricClientCommandSource>literal("autologin")
 
                 // /autologin
-                .executes(ctx -> {
+                .executes(_ -> {
                     sendMessage("§e使用方法:");
                     sendMessage("§7/autologin setpassword <密码>");
                     sendMessage("§7/autologin chooseserver <survival|minigames|redstone|none>");
@@ -349,20 +318,20 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 })
 
                 // /autologin setpassword <password>
-                .then(literal("setpassword")
-                        .then(argument("password", StringArgumentType.greedyString())
+                .then(LiteralArgumentBuilder.<FabricClientCommandSource>literal("setpassword")
+                        .then(RequiredArgumentBuilder.<FabricClientCommandSource, String>argument("password", StringArgumentType.greedyString())
                                 .executes(HohxilAutoLoginClient::changePassword)
                         )
-                        .executes(ctx -> {
+                        .executes(_ -> {
                             sendMessage("§e使用方法: /autologin setpassword <password>");
                             return 1;
                         })
                 )
 
                 // /autologin chooseserver <...>
-                .then(literal("chooseserver")
-                        .then(argument("server", StringArgumentType.word())
-                                .suggests((ctx, builder) -> {
+                .then(LiteralArgumentBuilder.<FabricClientCommandSource>literal("chooseserver")
+                        .then(RequiredArgumentBuilder.<FabricClientCommandSource, String>argument("server", StringArgumentType.word())
+                                .suggests((_, builder) -> {
                                     builder.suggest("survival");
                                     builder.suggest("redstone");
                                     builder.suggest("minigames");
@@ -371,28 +340,28 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                                 })
                                 .executes(HohxilAutoLoginClient::changeServer)
                         )
-                        .executes(ctx -> {
+                        .executes(_ -> {
                             sendMessage("§e使用方法: /autologin chooseserver <survival|minigames|redstone|none>");
                             return 1;
                         })
                 )
 
-                .then(literal("changeaddress")
-                        .then(argument("address", StringArgumentType.greedyString())
-                                .suggests((context, builder) ->
+                .then(LiteralArgumentBuilder.<FabricClientCommandSource>literal("changeaddress")
+                        .then(RequiredArgumentBuilder.<FabricClientCommandSource, String>argument("address", StringArgumentType.greedyString())
+                                .suggests((_, builder) ->
                                         builder.suggest("cko.cc").suggest("mc.cko.cc:19999").buildFuture()
                                 )
                                 .executes(HohxilAutoLoginClient::changeAddress)
                         )
-                        .executes(ctx -> {
+                        .executes(_ -> {
                             sendMessage("§e使用方法: /autologin changeaddress <服务器地址>");
                             return 1;
                         })
                 )
 
                 // /autologin claim_
-                .then(literal("claim")
-                        .executes(ctx -> {
+                .then(LiteralArgumentBuilder.<FabricClientCommandSource>literal("claim")
+                        .executes(_ -> {
                             MenuManager.checkMenu(MenuManager.AFK_REWARD);
                             return 1;
                         })

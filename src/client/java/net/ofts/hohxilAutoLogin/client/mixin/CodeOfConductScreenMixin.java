@@ -1,9 +1,9 @@
 package net.ofts.hohxilAutoLogin.client.mixin;
 
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
-import net.minecraft.client.gui.screen.multiplayer.CodeOfConductScreen;
-import net.minecraft.client.network.ServerInfo;
-import net.minecraft.client.option.ServerList;
+import net.minecraft.client.gui.screens.multiplayer.CodeOfConductScreen;
+import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.multiplayer.ServerList;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -16,20 +16,20 @@ public abstract class CodeOfConductScreenMixin {
 
     @Shadow
     @Final
-    private BooleanConsumer callback;
+    private BooleanConsumer resultConsumer;
 
     @Shadow
     @Final
-    private ServerInfo serverInfo;
+    private ServerData serverData;
 
     @Shadow
     @Final
-    private String rawCodeOfConduct;
+    private String codeOfConductText;
 
     @Inject(method = "<init>*", at=@At("TAIL"))
     private void onCreate(CallbackInfo ci){
-        this.callback.accept(true);
-        this.serverInfo.setAcceptedCodeOfConduct(this.rawCodeOfConduct);
-        ServerList.updateServerListEntry(this.serverInfo);
+        this.resultConsumer.accept(true);
+        this.serverData.acceptCodeOfConduct(this.codeOfConductText);
+        ServerList.saveSingleServer(this.serverData);
     }
 }
