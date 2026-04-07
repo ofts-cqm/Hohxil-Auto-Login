@@ -9,7 +9,7 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.network.HashedStack;
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.ofts.hohxilAutoLogin.client.AutoLoginConfig;
 import org.slf4j.Logger;
@@ -50,6 +50,6 @@ public record MenuHandler(int id, String menuMatcher, SlotHandler slotHandler, R
         if (client.getConnection() == null) return;
         HashedStack carriedItem = HashedStack.create(menu.getCarried(), client.getConnection().decoratedHashOpsGenenerator());
 
-        client.getConnection().send(new ServerboundContainerClickPacket(syncId, stateId, (short) slot, (byte) 0, ClickType.PICKUP, new Int2ObjectOpenHashMap<>(), carriedItem));
+        client.getConnection().send(new ServerboundContainerClickPacket(syncId, stateId, (short) slot, (byte) 0, ContainerInput.PICKUP, new Int2ObjectOpenHashMap<>(), carriedItem));
     }
 }

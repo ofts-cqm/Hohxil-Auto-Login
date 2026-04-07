@@ -250,7 +250,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 if (config.titleToRefresh.isEmpty()) {
                     client.execute(() -> {
                         assert client.player != null;
-                        client.player.displayClientMessage(Component.literal("§a[可可西里自动登录] 您未设置自动刷新的称号！"), false);
+                        client.player.sendSystemMessage(Component.literal("§a[可可西里自动登录] 您未设置自动刷新的称号！"));
                     });
                     return;
                 }
