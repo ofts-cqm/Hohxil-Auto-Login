@@ -97,8 +97,8 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
     }
 
     private static void handleGreeting(){
-        List<String> messages = AutoLoginConfig.get().greetingMessageList;
-        boolean sequential = AutoLoginConfig.get().sequential;
+        List<String> messages = config.greetingMessageList;
+        boolean sequential = config.sequential;
         Minecraft client = Minecraft.getInstance();
 
         new Thread(() -> {
@@ -117,7 +117,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 String message = messages.get(i);
 
                 try {
-                    Thread.sleep(AutoLoginConfig.get().greetingInterval);
+                    Thread.sleep(config.greetingInterval);
                 } catch (InterruptedException ignored) {}
 
                 LOGGER.info("sending message {} on thread {}", message, Thread.currentThread().getName());
@@ -141,7 +141,6 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
     }
 
     public static void onLoaded(Minecraft client){
-        AutoLoginConfig config = AutoLoginConfig.get();
         if (!config.autoConnect) return;
 
         ServerList serverList = new ServerList(Minecraft.getInstance());
@@ -159,8 +158,6 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
     }
 
     public static void reconnect(Minecraft client, boolean force) {
-        AutoLoginConfig config = AutoLoginConfig.get();
-
         if (!force && config.connectionRetryCount != 0 && reconnectionTried > config.connectionRetryCount) return;
 
         reconnectionTried++;
@@ -177,7 +174,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
 
             if (!(force || client.screen instanceof DisconnectedScreen)) return;
 
-            String address = AutoLoginConfig.get().address;
+            String address = config.address;
             if (oldInfo == null){
                 oldInfo = new ServerData("Minecraft Server", address, ServerData.Type.OTHER);
             }
@@ -199,14 +196,11 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
     }
 
     private static void onJoinedLoginHall(){
-        AutoLoginConfig config = AutoLoginConfig.get();
-
         try {
             Thread.sleep(config.loginDelay); // 2 seconds
         } catch (InterruptedException ignored) {}
 
         Minecraft client = Minecraft.getInstance();
-
         String password = config.password;
 
         if (password.isEmpty()) {
@@ -242,8 +236,6 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
     }
 
     private static void onJoinedMainServer(){
-        AutoLoginConfig config = AutoLoginConfig.get();
-
         try {
             Thread.sleep(config.commandDelay); // 2 seconds
         } catch (InterruptedException ignored) {
@@ -291,7 +283,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         if (!shouldAutoLogin) return;
 
         ServerData server = Minecraft.getInstance().getCurrentServer();
-        if (server == null || !server.ip.equals(AutoLoginConfig.get().address)) {
+        if (server == null || !server.ip.equals(config.address)) {
             return;
         }
 
