@@ -3,6 +3,7 @@ package net.ofts.hohxilAutoLogin.client.mixin;
 import net.ofts.hohxilAutoLogin.client.AutoLoginConfig;
 import net.ofts.hohxilAutoLogin.client.HohxilAutoLoginClient;
 import net.ofts.hohxilAutoLogin.client.menu.MenuManager;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -23,11 +24,14 @@ import net.minecraft.client.gui.screens.inventory.BookViewScreen;
 import net.minecraft.network.chat.Component;
 
 @Mixin(Minecraft.class)
-public class MinecraftClientMixin {
+public abstract class MinecraftClientMixin {
 
     @Shadow
     @Final
     private Window window;
+
+    @Shadow
+    public abstract void setScreen(@Nullable Screen screen);
 
     @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
     private void onInitSetScreen(Screen screen, CallbackInfo ci){
@@ -52,6 +56,7 @@ public class MinecraftClientMixin {
     private void onSetScreen(Screen screen, CallbackInfo ci)  {
         if (screen instanceof DisconnectedScreen disconnected) {
             if (AutoLoginConfig.get().matchBlacklist(disconnected.getTitle().getString())) return;
+            setScreen(null);
             HohxilAutoLoginClient.reconnect(Minecraft.getInstance(), false);
         }else if (screen instanceof TitleScreen){
             if (lastScreen == null) HohxilAutoLoginClient.onLoaded((Minecraft)(Object)this);
