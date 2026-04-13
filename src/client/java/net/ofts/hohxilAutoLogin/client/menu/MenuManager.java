@@ -1,5 +1,7 @@
 package net.ofts.hohxilAutoLogin.client.menu;
 
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.NonNullList;
@@ -13,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -20,6 +23,7 @@ public class MenuManager {
     public static final int SERVER_CHOOSER = 0;
     public static final int CHECK_IN = 1;
     public static final int AFK_REWARD = 2;
+    @Deprecated
     public static final int MAIN_MENU = 3;
     public static final int REFRESH_TITLE = 4;
 
@@ -39,6 +43,16 @@ public class MenuManager {
         if (taskQueue[id] != null) return;
         taskQueue[id] = new Task(id);
         taskQueue[id].open();
+    }
+
+    public static int checkMenu(String name){
+        for (MenuHandler handler : handlers){
+            if (handler.name().equals(name)){
+                checkMenu(handler.id());
+                return 1;
+            }
+        }
+        return 0;
     }
 
     private static void auditTask(){
@@ -68,6 +82,11 @@ public class MenuManager {
         }
 
         return false;
+    }
+
+    public static CompletableFuture<Suggestions> getSuggestion(SuggestionsBuilder builder){
+        for (MenuHandler handler : handlers) builder.suggest(handler.name());
+        return builder.buildFuture();
     }
 
     private static int anyArrived(){
@@ -132,21 +151,21 @@ public class MenuManager {
     static {
         Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(MenuManager::auditTask, 0, config.openMenuDelay, TimeUnit.MILLISECONDS);
 
-        handlers[SERVER_CHOOSER] = new MenuHandler(SERVER_CHOOSER, "进入游玩",
+        handlers[SERVER_CHOOSER] = new MenuHandler(SERVER_CHOOSER, "choose_server", "进入游玩",
                 (_) -> getSlotForTarget(config.targetServer),
                 MenuManager::openServerSelectionMenu,
                 MenuHandler::NOTHING,
                 false
         );
 
-        handlers[CHECK_IN] = new MenuHandler(CHECK_IN, "签到菜单",
+        handlers[CHECK_IN] = new MenuHandler(CHECK_IN, "checkin", "签到菜单",
                 (a) -> getSlotWith(a, Items.YELLOW_TERRACOTTA),
                 () -> openCommandMenu("签到"),
                 MenuHandler::NOTHING,
                 false
         );
 
-        handlers[AFK_REWARD] = new MenuHandler(AFK_REWARD, "在线奖励",
+        handlers[AFK_REWARD] = new MenuHandler(AFK_REWARD, "claim_reward","在线奖励",
                 (a) -> getSlotWith(a, Items.EXPERIENCE_BOTTLE),
                 () -> openCommandMenu("zxjl"),
                 (inventory) -> {
@@ -161,14 +180,14 @@ public class MenuManager {
                 false
         );
 
-        handlers[MAIN_MENU] = new MenuHandler(MAIN_MENU, "主菜单",
+        /*handlers[MAIN_MENU] = new MenuHandler(MAIN_MENU, "", "主菜单",
                 (a) -> getSlotWith(a, Items.PAPER),
                 () -> openCommandMenu("cd"),
                 (_) -> checkMenu(AFK_REWARD),
                 false
-        );
+        );*/
 
-        handlers[REFRESH_TITLE] = new MenuHandler(REFRESH_TITLE, "称号仓库",
+        handlers[REFRESH_TITLE] = new MenuHandler(REFRESH_TITLE, "refresh_title", "称号仓库",
                 (a) -> getSlotNamed(a, config.titleToRefresh),
                 () -> openCommandMenu("ch"),
                 MenuHandler::NOTHING,
