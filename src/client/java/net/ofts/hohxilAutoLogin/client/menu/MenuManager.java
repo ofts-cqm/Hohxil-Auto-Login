@@ -47,7 +47,7 @@ public class MenuManager {
 
     public static boolean checkMenu(String name){
         for (MenuHandler handler : handlers){
-            if (handler.name().equals(name)){
+            if (handler != null && handler.name().equals(name)){
                 checkMenu(handler.id());
                 return true;
             }
@@ -85,7 +85,7 @@ public class MenuManager {
     }
 
     public static CompletableFuture<Suggestions> getSuggestion(SuggestionsBuilder builder){
-        for (MenuHandler handler : handlers) builder.suggest(handler.name());
+        for (MenuHandler handler : handlers) if (handler != null) builder.suggest(handler.name());
         return builder.buildFuture();
     }
 
