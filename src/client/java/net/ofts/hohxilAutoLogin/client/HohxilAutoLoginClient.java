@@ -1,5 +1,7 @@
 package net.ofts.hohxilAutoLogin.client;
 
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
@@ -22,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 
 public class HohxilAutoLoginClient implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("HohxilAutoLogin");
@@ -30,6 +33,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
     public static int reconnectionTried = 0;
     public static ServerData oldInfo = null;
     public static Screen lastScreen = null;
+    public static final AutoLoginConfig config = AutoLoginConfig.get();
 
     @Override
     public void onInitializeClient() {
@@ -44,10 +48,10 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         );
         ClientReceiveMessageEvents.GAME.register((message, _) -> {
             String msg = message.getString();
-            if (msg.contains("加入我们可可西里") && msg.contains("欢迎") && AutoLoginConfig.get().autoGreeting){
+            if (msg.contains("加入我们可可西里") && msg.contains("欢迎") && config.autoGreeting){
                 handleGreeting();
             }
-            if (msg.contains("你今天还没有签到") && AutoLoginConfig.get().autoCheckin){
+            if (msg.contains("你今天还没有签到") && config.autoCheckin){
                 MenuManager.checkMenu(MenuManager.CHECK_IN);
             }
         });
@@ -56,7 +60,43 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         checkDependencies();
     }
 
-    void handleGreeting(){
+    public static CompletableFuture<Suggestions> getSuggestion(SuggestionsBuilder builder){
+        builder.suggest("start_greeting");
+        builder.suggest("start_reconnection");
+        builder.suggest("on_join_main_server");
+        builder.suggest("on_join_login_hall");
+        builder.suggest("on_joined_general");
+
+        return builder.buildFuture();
+    }
+
+    public static boolean runAction(String trigger){
+        return switch (trigger) {
+            case "start_greeting" -> {
+                handleGreeting();
+                yield true;
+            }
+            case "start_reconnection" -> {
+                reconnect(Minecraft.getInstance(), true);
+                yield true;
+            }
+            case "on_join_main_server" -> {
+                new Thread(HohxilAutoLoginClient::onJoinedMainServer).start();
+                yield true;
+            }
+            case "on_join_login_hall" -> {
+                new Thread(HohxilAutoLoginClient::onJoinedLoginHall).start();
+                yield true;
+            }
+            case "on_joined_general" -> {
+                onJoin();
+                yield true;
+            }
+            default -> false;
+        };
+    }
+
+    private static void handleGreeting(){
         List<String> messages = AutoLoginConfig.get().greetingMessageList;
         boolean sequential = AutoLoginConfig.get().sequential;
         Minecraft client = Minecraft.getInstance();
@@ -158,47 +198,91 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         }).start();
     }
 
-    public static void onJoin() {
+    private static void onJoinedLoginHall(){
+        AutoLoginConfig config = AutoLoginConfig.get();
+
+        try {
+            Thread.sleep(config.loginDelay); // 2 seconds
+        } catch (InterruptedException ignored) {}
+
+        Minecraft client = Minecraft.getInstance();
+
+        String password = config.password;
+
+        if (password.isEmpty()) {
+            LOGGER.info("Password is empty, skipping");
+
+            assert client.player != null;
+            client.execute(() -> client.player.sendSystemMessage(Component.literal("§a[可可西里自动登录] 警告：您未设置登录密码。使用/autologin setpassword <密码> 设置登录密码")));
+            return;
+        }
+
+        client.execute(() -> {
+            if (client.getConnection() != null) {
+                LOGGER.info("Sending password [{}]", password);
+                client.getConnection().sendCommand("login " + password);
+                assert client.player != null;
+                client.player.sendSystemMessage(Component.literal("§a[可可西里自动登录] 正在尝试登录"));
+            }
+        });
+
+        try {
+            Thread.sleep(config.commandDelay); // 2 seconds
+        } catch (InterruptedException ignored) {}
+
+        client.execute(() -> {
+            LOGGER.info("Sending ({}) custom commands", config.customCommands.size());
+            for (String customCommand : config.customCommands) {
+                Objects.requireNonNull(client.getConnection())
+                        .sendCommand(customCommand);
+            }
+        });
+
+        if (config.targetServer != AutoLoginConfig.TargetServer.NONE) MenuManager.checkMenu(MenuManager.SERVER_CHOOSER);
+    }
+
+    private static void onJoinedMainServer(){
+        AutoLoginConfig config = AutoLoginConfig.get();
+
+        try {
+            Thread.sleep(config.commandDelay); // 2 seconds
+        } catch (InterruptedException ignored) {
+        }
+
+        Minecraft client = Minecraft.getInstance();
+
+        client.execute(() -> {
+            LOGGER.info("Sending ({}) custom commands after joining server", config.customCommandsAfterServer.size());
+            for (String customCommand : config.customCommandsAfterServer) {
+                Objects.requireNonNull(client.getConnection())
+                        .sendCommand(customCommand);
+            }
+        });
+
+        if (!config.refreshTitle) return;
+        if (config.titleToRefresh.isEmpty()) {
+            client.execute(() -> {
+                assert client.player != null;
+                client.player.sendSystemMessage(Component.literal("§a[可可西里自动登录] 您未设置自动刷新的称号！"));
+            });
+            return;
+        }
+
+        try {
+            Thread.sleep(config.commandDelay); // 2 seconds
+        } catch (InterruptedException ignored) {
+        }
+
+        MenuManager.checkMenu(MenuManager.REFRESH_TITLE);
+    }
+
+    private static void onJoin() {
         reconnectionTried = 0;
 
         if (sendAfterServerCommands){
             sendAfterServerCommands = false;
 
-            new Thread(() -> {
-                AutoLoginConfig config = AutoLoginConfig.get();
-
-                try {
-                    Thread.sleep(config.commandDelay); // 2 seconds
-                } catch (InterruptedException ignored) {
-                }
-
-                Minecraft client = Minecraft.getInstance();
-
-                client.execute(() -> {
-                    LOGGER.info("Sending ({}) custom commands after joining server", config.customCommandsAfterServer.size());
-                    for (String customCommand : config.customCommandsAfterServer) {
-                        Objects.requireNonNull(client.getConnection())
-                                .sendCommand(customCommand);
-                    }
-                });
-
-                if (!config.refreshTitle) return;
-                if (config.titleToRefresh.isEmpty()) {
-                    client.execute(() -> {
-                        assert client.player != null;
-                        client.player.displayClientMessage(Component.literal("§a[可可西里自动登录] 您未设置自动刷新的称号！"), false);
-                    });
-                    return;
-                }
-
-                try {
-                    Thread.sleep(config.commandDelay); // 2 seconds
-                } catch (InterruptedException ignored) {
-                }
-
-                MenuManager.checkMenu(MenuManager.REFRESH_TITLE);
-            }).start();
-
+            new Thread(HohxilAutoLoginClient::onJoinedMainServer).start();
             return;
         }
 
@@ -207,7 +291,6 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         if (!shouldAutoLogin) return;
 
         ServerData server = Minecraft.getInstance().getCurrentServer();
-
         if (server == null || !server.ip.equals(AutoLoginConfig.get().address)) {
             return;
         }
@@ -215,47 +298,6 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         shouldAutoLogin = false;
         LOGGER.info("Server Joined, wait 1s to send login credentials");
 
-        new Thread(() -> {
-            AutoLoginConfig config = AutoLoginConfig.get();
-
-            try {
-                Thread.sleep(config.loginDelay); // 2 seconds
-            } catch (InterruptedException ignored) {}
-
-            Minecraft client = Minecraft.getInstance();
-
-            String password = config.password;
-
-            if (password.isEmpty()) {
-                LOGGER.info("Password is empty, skipping");
-
-                assert client.player != null;
-                client.execute(() -> client.player.displayClientMessage(Component.literal("§a[可可西里自动登录] 警告：您未设置登录密码。使用/autologin setpassword <密码> 设置登录密码"), false));
-                return;
-            }
-
-            client.execute(() -> {
-                if (client.getConnection() != null) {
-                    LOGGER.info("Sending password [{}]", password);
-                    client.getConnection().sendCommand("login " + password);
-                    assert client.player != null;
-                    client.player.displayClientMessage(Component.literal("§a[可可西里自动登录] 正在尝试登录"), false);
-                }
-            });
-
-            try {
-                Thread.sleep(config.commandDelay); // 2 seconds
-            } catch (InterruptedException ignored) {}
-
-            client.execute(() -> {
-                LOGGER.info("Sending ({}) custom commands", config.customCommands.size());
-                for (String customCommand : config.customCommands) {
-                    Objects.requireNonNull(client.getConnection())
-                            .sendCommand(customCommand);
-                }
-            });
-
-            if (config.targetServer != AutoLoginConfig.TargetServer.NONE) MenuManager.checkMenu(MenuManager.SERVER_CHOOSER);
-        }).start();
+        new Thread(HohxilAutoLoginClient::onJoinedLoginHall).start();
     }
 }
