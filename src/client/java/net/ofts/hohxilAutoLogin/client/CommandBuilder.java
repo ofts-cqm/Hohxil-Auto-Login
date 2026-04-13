@@ -118,6 +118,14 @@ public class CommandBuilder {
         return builder.buildFuture();
     }
 
+    private static int runAction(CommandContext<FabricClientCommandSource> ctx){
+        String arg = StringArgumentType.getString(ctx, "trigger").toLowerCase();
+
+        if (MenuManager.checkMenu(arg)) return 1;
+        if (HohxilAutoLoginClient.runAction(arg)) return 1;
+        return 0;
+    }
+
     private static LiteralArgumentBuilder<FabricClientCommandSource> buildChooseServer(){
         return LiteralArgumentBuilder.<FabricClientCommandSource>literal("chooseserver")
                 .then(RequiredArgumentBuilder.<FabricClientCommandSource, String>argument("server", StringArgumentType.word())
@@ -148,7 +156,8 @@ public class CommandBuilder {
         return LiteralArgumentBuilder.<FabricClientCommandSource>literal("trigger")
                 .then(RequiredArgumentBuilder.<FabricClientCommandSource, String>argument("action", StringArgumentType.greedyString())
                         .suggests((_, builder) -> MenuManager.getSuggestion(builder))
-                        .executes(ctx -> MenuManager.checkMenu(StringArgumentType.getString(ctx, "address").toLowerCase()))
+                        .suggests((_, builder) -> HohxilAutoLoginClient.getSuggestion(builder))
+                        .executes(CommandBuilder::runAction)
                 )
                 .executes(_ -> {
                     sendMessage("§e使用方法: /autologin trigger <要运行的项目>");

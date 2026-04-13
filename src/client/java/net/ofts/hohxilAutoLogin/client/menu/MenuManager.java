@@ -45,14 +45,14 @@ public class MenuManager {
         taskQueue[id].open();
     }
 
-    public static int checkMenu(String name){
+    public static boolean checkMenu(String name){
         for (MenuHandler handler : handlers){
             if (handler.name().equals(name)){
                 checkMenu(handler.id());
-                return 1;
+                return true;
             }
         }
-        return 0;
+        return false;
     }
 
     private static void auditTask(){
