@@ -213,7 +213,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
             LOGGER.info("Password is empty, skipping");
 
             assert client.player != null;
-            client.execute(() -> client.player.sendSystemMessage(Component.literal("§a[可可西里自动登录] 警告：您未设置登录密码。使用/autologin setpassword <密码> 设置登录密码")));
+            client.execute(() -> client.player.displayClientMessage(Component.literal("§a[可可西里自动登录] 警告：您未设置登录密码。使用/autologin setpassword <密码> 设置登录密码"), false));
             return;
         }
 
@@ -222,7 +222,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 LOGGER.info("Sending password [{}]", password);
                 client.getConnection().sendCommand("login " + password);
                 assert client.player != null;
-                client.player.sendSystemMessage(Component.literal("§a[可可西里自动登录] 正在尝试登录"));
+                client.player.displayClientMessage(Component.literal("§a[可可西里自动登录] 正在尝试登录"), false);
             }
         });
 
@@ -263,7 +263,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         if (config.titleToRefresh.isEmpty()) {
             client.execute(() -> {
                 assert client.player != null;
-                client.player.sendSystemMessage(Component.literal("§a[可可西里自动登录] 您未设置自动刷新的称号！"));
+                client.player.displayClientMessage(Component.literal("§a[可可西里自动登录] 您未设置自动刷新的称号！"), false);
             });
             return;
         }
