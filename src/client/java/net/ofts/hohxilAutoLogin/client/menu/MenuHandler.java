@@ -15,7 +15,7 @@ import net.ofts.hohxilAutoLogin.client.AutoLoginConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public record MenuHandler(int id, String menuMatcher, SlotHandler slotHandler, Runnable opener, Consumer<NonNullList<Slot>> callback, boolean clickTwice) {
+public record MenuHandler(int id, String name, String menuMatcher, SlotHandler slotHandler, Runnable opener, Consumer<NonNullList<Slot>> callback, boolean clickTwice) {
 
     public static final Logger LOGGER = LoggerFactory.getLogger("Auto Clicker");
 

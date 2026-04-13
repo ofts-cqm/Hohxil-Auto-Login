@@ -1,11 +1,7 @@
 package net.ofts.hohxilAutoLogin.client;
 
-import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
-import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -27,8 +23,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
-import com.mojang.brigadier.builder.RequiredArgumentBuilder;
-
 public class HohxilAutoLoginClient implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("HohxilAutoLogin");
     public static boolean shouldAutoLogin = true;
@@ -36,7 +30,6 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
     public static int reconnectionTried = 0;
     public static ServerData oldInfo = null;
     public static Screen lastScreen = null;
-    public static final LiteralArgumentBuilder<FabricClientCommandSource> command;
 
     @Override
     public void onInitializeClient() {
@@ -58,9 +51,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 MenuManager.checkMenu(MenuManager.CHECK_IN);
             }
         });
-        ClientCommandRegistrationCallback.EVENT.register(
-                (dispatcher, _) -> dispatcher.register(command)
-        );
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, _) -> CommandBuilder.buildCommand(dispatcher));
 
         checkDependencies();
     }
@@ -127,60 +118,9 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         reconnect(client, true);
     }
 
-    private static int changeAddress(CommandContext<FabricClientCommandSource> ctx){
-        String input = StringArgumentType.getString(ctx, "address").toLowerCase();
-        AutoLoginConfig config = AutoLoginConfig.get();
-        config.address = input;
-        AutoLoginConfig.save();
-
-        LOGGER.info("updated server address to: " + config.address);
-
-        assert Minecraft.getInstance().player != null;
-        Minecraft.getInstance().player.sendSystemMessage(Component.literal("§a[可可西里自动登录] 服务器地址更新成功！"));
-
-        return 1;
-    }
-
-    private static int changeServer(CommandContext<FabricClientCommandSource> ctx){
-        String input = StringArgumentType.getString(ctx, "server").toLowerCase();
-
-        AutoLoginConfig config = AutoLoginConfig.get();
-
-        switch (input) {
-            case "survival" -> config.targetServer = AutoLoginConfig.TargetServer.SURVIVAL;
-            case "redstone" -> config.targetServer = AutoLoginConfig.TargetServer.REDSTONE;
-            case "minigames" -> config.targetServer = AutoLoginConfig.TargetServer.MINIGAMES;
-            case "none" -> config.targetServer = AutoLoginConfig.TargetServer.NONE;
-            default -> {
-                sendMessage("§c无效的服务器！");
-                return 0;
-            }
-        }
-
-        AutoLoginConfig.save();
-
-        sendMessage("§a已选择服务器: " + config.targetServer.name().toLowerCase());
-        return 1;
-    }
-
     private static void sendMessage(String s) {
         assert Minecraft.getInstance().player != null;
         Minecraft.getInstance().player.sendSystemMessage(Component.literal(s));
-    }
-
-    public static int changePassword(CommandContext<FabricClientCommandSource> ctx){
-        String newPassword = StringArgumentType.getString(ctx, "password");
-
-        AutoLoginConfig config = AutoLoginConfig.get();
-        config.password = newPassword;
-        AutoLoginConfig.save();
-
-        LOGGER.info("updated password to: {}", config.password);
-
-        assert Minecraft.getInstance().player != null;
-        Minecraft.getInstance().player.sendSystemMessage(Component.literal("§a[可可西里自动登录] 密码更新成功！"));
-
-        return 1;
     }
 
     public static void reconnect(Minecraft client, boolean force) {
@@ -210,6 +150,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
             client.execute(() -> {
                 LOGGER.info("reconnecting...");
 
+                assert client.screen != null;
                 ConnectScreen.startConnecting(
                         client.screen,
                         client,
@@ -321,67 +262,5 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
 
             if (config.targetServer != AutoLoginConfig.TargetServer.NONE) MenuManager.checkMenu(MenuManager.SERVER_CHOOSER);
         }).start();
-    }
-
-    static {
-        command = LiteralArgumentBuilder.<FabricClientCommandSource>literal("autologin")
-
-                // /autologin
-                .executes(_ -> {
-                    sendMessage("§e使用方法:");
-                    sendMessage("§7/autologin setpassword <密码>");
-                    sendMessage("§7/autologin chooseserver <survival|minigames|redstone|none>");
-                    return 1;
-                })
-
-                // /autologin setpassword <password>
-                .then(LiteralArgumentBuilder.<FabricClientCommandSource>literal("setpassword")
-                        .then(RequiredArgumentBuilder.<FabricClientCommandSource, String>argument("password", StringArgumentType.greedyString())
-                                .executes(HohxilAutoLoginClient::changePassword)
-                        )
-                        .executes(_ -> {
-                            sendMessage("§e使用方法: /autologin setpassword <password>");
-                            return 1;
-                        })
-                )
-
-                // /autologin chooseserver <...>
-                .then(LiteralArgumentBuilder.<FabricClientCommandSource>literal("chooseserver")
-                        .then(RequiredArgumentBuilder.<FabricClientCommandSource, String>argument("server", StringArgumentType.word())
-                                .suggests((_, builder) -> {
-                                    builder.suggest("survival");
-                                    builder.suggest("redstone");
-                                    builder.suggest("minigames");
-                                    builder.suggest("none");
-                                    return builder.buildFuture();
-                                })
-                                .executes(HohxilAutoLoginClient::changeServer)
-                        )
-                        .executes(_ -> {
-                            sendMessage("§e使用方法: /autologin chooseserver <survival|minigames|redstone|none>");
-                            return 1;
-                        })
-                )
-
-                .then(LiteralArgumentBuilder.<FabricClientCommandSource>literal("changeaddress")
-                        .then(RequiredArgumentBuilder.<FabricClientCommandSource, String>argument("address", StringArgumentType.greedyString())
-                                .suggests((_, builder) ->
-                                        builder.suggest("cko.cc").suggest("mc.cko.cc:19999").buildFuture()
-                                )
-                                .executes(HohxilAutoLoginClient::changeAddress)
-                        )
-                        .executes(_ -> {
-                            sendMessage("§e使用方法: /autologin changeaddress <服务器地址>");
-                            return 1;
-                        })
-                )
-
-                // /autologin claim_
-                .then(LiteralArgumentBuilder.<FabricClientCommandSource>literal("claim")
-                        .executes(_ -> {
-                            MenuManager.checkMenu(MenuManager.AFK_REWARD);
-                            return 1;
-                        })
-                );
     }
 }
