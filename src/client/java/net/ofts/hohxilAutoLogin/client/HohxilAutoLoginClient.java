@@ -118,11 +118,6 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         reconnect(client, true);
     }
 
-    private static void sendMessage(String s) {
-        assert Minecraft.getInstance().player != null;
-        Minecraft.getInstance().player.sendSystemMessage(Component.literal(s));
-    }
-
     public static void reconnect(Minecraft client, boolean force) {
         AutoLoginConfig config = AutoLoginConfig.get();
 
