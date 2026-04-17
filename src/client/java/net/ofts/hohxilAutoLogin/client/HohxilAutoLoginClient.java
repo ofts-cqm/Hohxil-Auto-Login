@@ -16,6 +16,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.DisconnectedScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerList;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
@@ -95,6 +96,8 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 yield true;
             }
             case "start_reconnection" -> {
+                Minecraft client = Minecraft.getInstance();
+                client.disconnectFromWorld(ClientLevel.DEFAULT_QUIT_MESSAGE);
                 reconnect(Minecraft.getInstance(), true);
                 yield true;
             }
