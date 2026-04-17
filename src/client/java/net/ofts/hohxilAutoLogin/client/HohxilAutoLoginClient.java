@@ -1,13 +1,17 @@
 package net.ofts.hohxilAutoLogin.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.DisconnectedScreen;
@@ -18,6 +22,7 @@ import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.network.chat.Component;
 import net.ofts.hohxilAutoLogin.client.configUI.ModMenuAPIImpl;
 import net.ofts.hohxilAutoLogin.client.menu.MenuManager;
+import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +39,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
     public static ServerData oldInfo = null;
     public static Screen lastScreen = null;
     public static final AutoLoginConfig config = AutoLoginConfig.get();
+    public static KeyMapping openActionMenu;
 
     @Override
     public void onInitializeClient() {
@@ -56,8 +62,20 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
             }
         });
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, _) -> CommandBuilder.buildCommand(dispatcher));
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (openActionMenu.consumeClick() && client.screen == null) {
+                client.setScreen(new RunActionMenu());
+            }
+        });
 
         checkDependencies();
+
+        openActionMenu = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "打开手动运行菜单", // Translation key
+                InputConstants.Type.KEYSYM, // Type
+                GLFW.GLFW_KEY_U, // Default key
+                KeyMapping.Category.MISC // Category
+        ));
     }
 
     public static CompletableFuture<Suggestions> getSuggestion(SuggestionsBuilder builder){
