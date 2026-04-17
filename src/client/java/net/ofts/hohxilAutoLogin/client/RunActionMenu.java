@@ -1,7 +1,7 @@
 package net.ofts.hohxilAutoLogin.client;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.FittingMultiLineTextWidget;
 import net.minecraft.client.gui.components.StringWidget;
@@ -87,7 +87,7 @@ public class RunActionMenu extends Screen {
             }
 
             assert Minecraft.getInstance().player != null;
-            Minecraft.getInstance().player.sendSystemMessage(Component.literal("错误：未知指令"));
+            Minecraft.getInstance().player.displayClientMessage(Component.literal("错误：未知指令"), false);
         }
 
         private static void runAction(String action){
@@ -96,8 +96,8 @@ public class RunActionMenu extends Screen {
         }
 
         @Override
-        protected void extractContents(@NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-            super.extractContents(graphics, mouseX, mouseY, a);
+        public void renderContents(@NonNull GuiGraphics graphics, int mouseX, int mouseY, float a) {
+            super.renderContents(graphics, mouseX, mouseY, a);
             if (this.isHovered && !justHovered) detailsWidget.setMessage(detail);
             else if (this.justHovered && !isHovered) detailsWidget.setMessage(Component.empty());
             justHovered = isHovered;

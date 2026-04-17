@@ -6,7 +6,7 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -16,6 +16,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.DisconnectedScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerList;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
@@ -70,7 +71,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
 
         checkDependencies();
 
-        openActionMenu = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+        openActionMenu = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "打开手动运行菜单", // Translation key
                 InputConstants.Type.KEYSYM, // Type
                 GLFW.GLFW_KEY_U, // Default key
@@ -95,7 +96,9 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 yield true;
             }
             case "start_reconnection" -> {
-                reconnect(Minecraft.getInstance(), true);
+                Minecraft client = Minecraft.getInstance();
+                client.disconnectFromWorld(ClientLevel.DEFAULT_QUIT_MESSAGE);
+                reconnect(client, true);
                 yield true;
             }
             case "on_join_main_server" -> {
