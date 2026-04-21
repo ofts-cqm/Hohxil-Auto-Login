@@ -56,7 +56,7 @@ public abstract class MinecraftClientMixin {
     private void onSetScreen(Screen screen, CallbackInfo ci)  {
         if (screen instanceof DisconnectedScreen disconnected) {
             if (AutoLoginConfig.get().matchBlacklist(disconnected.getTitle().getString())) return;
-            setScreen(null);
+            //setScreen(null);
             HohxilAutoLoginClient.reconnect(Minecraft.getInstance(), false);
         }else if (screen instanceof TitleScreen){
             if (lastScreen == null) HohxilAutoLoginClient.onLoaded((Minecraft)(Object)this);
