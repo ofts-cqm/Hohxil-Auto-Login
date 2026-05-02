@@ -1,9 +1,9 @@
 package net.ofts.hohxilAutoLogin.client.mixin;
 
+import net.minecraft.client.gui.screens.dialog.SimpleDialogScreen;
 import net.ofts.hohxilAutoLogin.client.AutoLoginConfig;
 import net.ofts.hohxilAutoLogin.client.HohxilAutoLoginClient;
 import net.ofts.hohxilAutoLogin.client.menu.MenuManager;
-import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -30,9 +30,6 @@ public abstract class MinecraftClientMixin {
     @Final
     private Window window;
 
-    @Shadow
-    public abstract void setScreen(@Nullable Screen screen);
-
     @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
     private void onInitSetScreen(Screen screen, CallbackInfo ci){
         if (screen instanceof AbstractContainerScreen<?> handledScreen) {
@@ -49,6 +46,8 @@ public abstract class MinecraftClientMixin {
                     return;
                 }
             }
+        } else if (screen instanceof SimpleDialogScreen<?> dialog && dialog.getTitle().getString().contains("账号登录")){
+            ci.cancel();
         }
     }
 
