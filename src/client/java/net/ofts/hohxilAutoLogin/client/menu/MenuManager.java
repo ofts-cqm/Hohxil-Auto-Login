@@ -236,9 +236,9 @@ public class MenuManager {
                 client.player.getInventory().setSelectedSlot(4);
                 assert client.gameMode != null;
                 client.gameMode.useItem(client.player, InteractionHand.MAIN_HAND);
-                client.player.displayClientMessage(Component.literal("Opening Server Menu"), false);
+                client.player.sendSystemMessage(Component.literal("Opening Server Menu"));
             }else {
-                client.player.displayClientMessage(Component.literal("Open Menu Failed, Stack is Empty"), false);
+                client.player.sendSystemMessage(Component.literal("Open Menu Failed, Stack is Empty"));
             }
         });
     }
