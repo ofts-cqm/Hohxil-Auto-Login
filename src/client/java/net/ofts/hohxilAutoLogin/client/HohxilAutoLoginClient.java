@@ -259,6 +259,10 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
             }
         });
 
+        try {
+            Thread.sleep(config.openMenuDelay); // 2 seconds
+        } catch (InterruptedException ignored) {}
+
         if (config.targetServer != AutoLoginConfig.TargetServer.NONE) MenuManager.checkMenu(MenuManager.SERVER_CHOOSER);
     }
 

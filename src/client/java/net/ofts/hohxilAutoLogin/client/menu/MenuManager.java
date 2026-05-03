@@ -5,6 +5,7 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.NonNullList;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
@@ -235,6 +236,9 @@ public class MenuManager {
                 client.player.getInventory().setSelectedSlot(4);
                 assert client.gameMode != null;
                 client.gameMode.useItem(client.player, InteractionHand.MAIN_HAND);
+                client.player.displayClientMessage(Component.literal("Opening Server Menu"), false);
+            }else {
+                client.player.displayClientMessage(Component.literal("Open Menu Failed, Stack is Empty"), false);
             }
         });
     }
