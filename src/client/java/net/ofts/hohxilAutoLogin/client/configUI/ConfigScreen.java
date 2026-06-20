@@ -187,6 +187,8 @@ public class ConfigScreen {
             case "REDSTONE" -> Component.literal("生电服");
             case "MINIGAMES" -> Component.literal("小游戏");
             case "NONE" -> Component.literal("暂不选择");
+            case "RESOURCES" -> Component.literal("资源区");
+            case "HUB" -> Component.literal("主城");
             default -> Component.literal(raw.name());
         };
     }

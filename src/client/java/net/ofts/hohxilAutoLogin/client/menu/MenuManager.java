@@ -126,9 +126,11 @@ public class MenuManager {
 
     private static int getSlotForTarget(AutoLoginConfig.TargetServer target) {
         return switch (target) {
-            case SURVIVAL -> 11;
-            case REDSTONE -> 13;
-            case MINIGAMES -> 15;
+            case SURVIVAL -> 12;
+            case REDSTONE -> 14;
+            case MINIGAMES -> 31;
+            case HUB -> 10;
+            case RESOURCES -> 16;
             case NONE -> -1;
         };
     }
