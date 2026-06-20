@@ -65,6 +65,8 @@ public class CommandBuilder {
             case "redstone" -> config.targetServer = AutoLoginConfig.TargetServer.REDSTONE;
             case "minigames" -> config.targetServer = AutoLoginConfig.TargetServer.MINIGAMES;
             case "none" -> config.targetServer = AutoLoginConfig.TargetServer.NONE;
+            case "hub" -> config.targetServer = AutoLoginConfig.TargetServer.HUB;
+            case "resources" -> config.targetServer = AutoLoginConfig.TargetServer.RESOURCES;
             default -> {
                 sendMessage("§c无效的服务器！");
                 return 0;

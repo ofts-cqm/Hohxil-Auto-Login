@@ -45,6 +45,8 @@ public class AutoLoginConfig {
         SURVIVAL,
         REDSTONE,
         MINIGAMES,
+        HUB,
+        RESOURCES,
         NONE
     }
 
