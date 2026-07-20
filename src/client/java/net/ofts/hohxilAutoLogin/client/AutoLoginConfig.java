@@ -39,7 +39,7 @@ public class AutoLoginConfig {
     public boolean autoCheckin = true;
     public boolean sequential = true;
     public boolean refreshTitle = false;
-    public List<String> greetingMessageList = List.of("欢迎欢迎~新人记得res tp XCValkryia.Gallery，这里是服务器最大最全的地图画商店，超多地图画保证您的满意~");
+    public List<String> greetingMessageList = List.of("欢迎$$~新人记得res tp XCValkryia.Gallery，这里是服务器最大最全的地图画商店，超多地图画保证您的满意~");
 
     public enum TargetServer {
         SURVIVAL,

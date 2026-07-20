@@ -111,8 +111,8 @@ public class ConfigScreen {
                 .addEntry(generateDelayEntry(entryBuilder, "发送指令延迟", "登陆后延迟多久发送自定义指令", 6))
                 .addEntry(
                         entryBuilder.startStrList(Component.literal("自动欢迎消息"), config.greetingMessageList)
-                                .setDefaultValue(List.of("欢迎欢迎~新人记得res tp XCValkryia.Gallery，这里是服务器最大最全的地图画商店，超多地图画保证您的满意~"))
-                                .setTooltip(Component.literal("如果开启自动欢迎，发送的消息"))
+                                .setDefaultValue(List.of("欢迎$$~新人记得res tp XCValkryia.Gallery，这里是服务器最大最全的地图画商店，超多地图画保证您的满意~"))
+                                .setTooltip(Component.literal("如果开启自动欢迎，发送的消息。使用$$表示新加入的玩家的名字"))
                                 .setSaveConsumer(a -> config.greetingMessageList = a)
                                 .build()
                 )

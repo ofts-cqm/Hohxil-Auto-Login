@@ -55,8 +55,10 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         );
         ClientReceiveMessageEvents.GAME.register((message, _) -> {
             String msg = message.getString();
-            if (msg.contains("加入我们可可西里") && msg.contains("欢迎") && config.autoGreeting){
-                handleGreeting();
+            int idxBegin = msg.indexOf("欢迎！");
+            int idxEnd = msg.indexOf("加入我们可可西里");
+            if (idxBegin != -1 && idxEnd != -1 && config.autoGreeting){
+                handleGreeting(msg.substring(idxBegin + "欢迎！".length(), idxEnd));
             }
             if (msg.contains("你今天还没有签到") && config.autoCheckin){
                 MenuManager.checkMenu(MenuManager.CHECK_IN);
@@ -92,7 +94,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
     public static boolean runAction(String trigger){
         return switch (trigger) {
             case "start_greeting" -> {
-                handleGreeting();
+                handleGreeting("");
                 yield true;
             }
             case "start_reconnection" -> {
@@ -117,7 +119,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         };
     }
 
-    private static void handleGreeting(){
+    private static void handleGreeting(String name){
         List<String> messages = config.greetingMessageList;
         boolean sequential = config.sequential;
         Minecraft client = Minecraft.getInstance();
@@ -127,7 +129,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 if (messages.isEmpty()) return;
 
                 Random rand = new Random();
-                String message =  messages.get(rand.nextInt(messages.size()));
+                String message =  messages.get(rand.nextInt(messages.size())).replace("$$", name);
 
                 LOGGER.info("sending message {} on thread {}", message, Thread.currentThread().getName());
                 client.execute(() -> Objects.requireNonNull(client.getConnection()).sendChat(message));
@@ -135,7 +137,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
             }
 
             for (int i = 0; i < messages.size(); i++){
-                String message = messages.get(i);
+                String message = messages.get(i).replace("$$", name);
 
                 try {
                     Thread.sleep(config.greetingInterval);
