@@ -27,8 +27,9 @@ public class MenuManager {
     @Deprecated
     public static final int MAIN_MENU = 3;
     public static final int REFRESH_TITLE = 4;
+    public static final int CONSTABLE_REWARD = 5;
 
-    private static final int TYPE_COUNT = 5;
+    private static final int TYPE_COUNT = 6;
 
     private static final MenuHandler[] handlers = new MenuHandler[TYPE_COUNT];
     private static final Task[] taskQueue = new Task[TYPE_COUNT];
@@ -169,7 +170,10 @@ public class MenuManager {
         );
 
         handlers[AFK_REWARD] = new MenuHandler(AFK_REWARD, "claim_reward","在线奖励",
-                (a) -> getSlotWith(a, Items.EXPERIENCE_BOTTLE),
+                (a) -> {
+                    int slot = getSlotWith(a, Items.EXPERIENCE_BOTTLE);
+                    return slot == -1 ? getSlotWith(a, Items.ELYTRA) : slot;
+                },
                 () -> openCommandMenu("zxjl"),
                 (inventory) -> {
                     if (getSlotWith(inventory, Items.EXPERIENCE_BOTTLE) != -1)
@@ -179,6 +183,14 @@ public class MenuManager {
                                 checkMenu(AFK_REWARD);
                             }
                         }, 1000);
+                    else if (getSlotWith(inventory, Items.ELYTRA) != -1) {
+                        new Timer().schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                checkMenu(CONSTABLE_REWARD);
+                            }
+                        }, 1000);
+                    }
                 },
                 false
         );
@@ -195,6 +207,21 @@ public class MenuManager {
                 () -> openCommandMenu("ch"),
                 MenuHandler::NOTHING,
                 true
+        );
+
+        handlers[CONSTABLE_REWARD] = new MenuHandler(CONSTABLE_REWARD, "constable_reward", "巡查官在线礼包",
+                (a) -> getSlotWith(a, Items.EXPERIENCE_BOTTLE),
+                () -> openCommandMenu("xcgkit"),
+                (inventory) -> {
+                    if (getSlotWith(inventory, Items.EXPERIENCE_BOTTLE) != -1)
+                        new Timer().schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                checkMenu(CONSTABLE_REWARD);
+                            }
+                        }, 1000);
+                },
+                false
         );
     }
 

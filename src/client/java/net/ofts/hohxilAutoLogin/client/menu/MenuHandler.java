@@ -26,15 +26,17 @@ public record MenuHandler(int id, String name, String menuMatcher, SlotHandler s
 
         int slot = slotHandler.getSlots(inventory);
 
-        if (slot != -1) sendClick(screen.getMenu(), slot);
-
-        if (clickTwice){
-            AutoLoginConfig config = AutoLoginConfig.get();
-            try {
-                Thread.sleep(config.clickDelay);
-            } catch (InterruptedException ignored) {}
-
+        if (slot != -1){
             sendClick(screen.getMenu(), slot);
+
+            if (clickTwice){
+                AutoLoginConfig config = AutoLoginConfig.get();
+                try {
+                    Thread.sleep(config.clickDelay);
+                } catch (InterruptedException ignored) {}
+
+                sendClick(screen.getMenu(), slot);
+            }
         }
 
         callback.accept(inventory);
