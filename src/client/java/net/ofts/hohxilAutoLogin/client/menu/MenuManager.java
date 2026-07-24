@@ -209,7 +209,7 @@ public class MenuManager {
                 true
         );
 
-        handlers[CONSTABLE_REWARD] = new MenuHandler(CONSTABLE_REWARD, "constable_reward", "巡查官在线礼包",
+        handlers[CONSTABLE_REWARD] = new MenuHandler(CONSTABLE_REWARD, "constable_reward", "巡查官",
                 (a) -> getSlotWith(a, Items.EXPERIENCE_BOTTLE),
                 () -> openCommandMenu("xcgkit"),
                 (inventory) -> {
