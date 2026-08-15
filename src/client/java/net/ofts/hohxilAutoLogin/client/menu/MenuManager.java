@@ -155,7 +155,7 @@ public class MenuManager {
     static {
         Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(MenuManager::auditTask, 0, config.openMenuDelay, TimeUnit.MILLISECONDS);
 
-        handlers[SERVER_CHOOSER] = new MenuHandler(SERVER_CHOOSER, "choose_server", "进入游玩",
+        handlers[SERVER_CHOOSER] = new MenuHandler(SERVER_CHOOSER, "choose_server", "世界选择",
                 (_) -> getSlotForTarget(config.targetServer),
                 MenuManager::openServerSelectionMenu,
                 MenuHandler::NOTHING,
