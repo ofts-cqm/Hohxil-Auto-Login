@@ -66,8 +66,8 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         });
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, _) -> CommandBuilder.buildCommand(dispatcher));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (openActionMenu.consumeClick() && client.screen == null) {
-                client.setScreen(new RunActionMenu());
+            if (openActionMenu.consumeClick() && client.gui.screen() == null) {
+                client.gui.setScreen(new RunActionMenu());
             }
         });
 
@@ -195,7 +195,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 }
             }
 
-            if (!(force || client.screen instanceof DisconnectedScreen)) return;
+            if (!(force || client.gui.screen() instanceof DisconnectedScreen)) return;
 
             String address = config.address;
             if (oldInfo == null){
@@ -205,9 +205,9 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
             client.execute(() -> {
                 LOGGER.info("reconnecting...");
 
-                assert client.screen != null;
+                assert client.gui.screen() != null;
                 ConnectScreen.startConnecting(
-                        client.screen,
+                        client.gui.screen(),
                         client,
                         ServerAddress.parseString(address),
                         oldInfo,

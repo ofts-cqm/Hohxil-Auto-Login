@@ -120,7 +120,7 @@ public class MenuManager {
             if (config.hideMenu){
                 menu.onClose();
             }else {
-                client.setScreen(null);
+                client.gui.setScreen(null);
             }
         });
     }
@@ -163,7 +163,7 @@ public class MenuManager {
         );
 
         handlers[CHECK_IN] = new MenuHandler(CHECK_IN, "checkin", "签到菜单",
-                (a) -> getSlotWith(a, Items.YELLOW_TERRACOTTA),
+                (a) -> getSlotWith(a, Items.DYED_TERRACOTTA.yellow()),
                 () -> openCommandMenu("签到"),
                 MenuHandler::NOTHING,
                 false

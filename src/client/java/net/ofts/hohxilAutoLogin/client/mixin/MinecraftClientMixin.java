@@ -1,12 +1,11 @@
 package net.ofts.hohxilAutoLogin.client.mixin;
 
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.screens.dialog.SimpleDialogScreen;
 import net.ofts.hohxilAutoLogin.client.AutoLoginConfig;
 import net.ofts.hohxilAutoLogin.client.HohxilAutoLoginClient;
 import net.ofts.hohxilAutoLogin.client.menu.MenuManager;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -23,18 +22,15 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.BookViewScreen;
 import net.minecraft.network.chat.Component;
 
-@Mixin(Minecraft.class)
+@Mixin(Gui.class)
 public abstract class MinecraftClientMixin {
-
-    @Shadow
-    @Final
-    private Window window;
 
     @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
     private void onInitSetScreen(Screen screen, CallbackInfo ci){
         if (screen instanceof AbstractContainerScreen<?> handledScreen) {
             if (MenuManager.handleMenu(handledScreen) && AutoLoginConfig.get().hideMenu) {
-                screen.init(this.window.getGuiScaledWidth(), this.window.getGuiScaledHeight());
+                Window window = Minecraft.getInstance().getWindow();
+                screen.init(window.getGuiScaledWidth(), window.getGuiScaledHeight());
                 ci.cancel();
             }
         } else if (screen instanceof BookViewScreen bookScreen && AutoLoginConfig.get().closeAnnouncement) {
