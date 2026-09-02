@@ -43,7 +43,7 @@ public abstract class MinecraftClientMixin {
                 }
             }
         } else if (screen instanceof SimpleDialogScreen<?> dialog && dialog.getTitle().getString().contains("账号登录")){
-            ci.cancel();
+            //ci.cancel();
         }
     }
 
@@ -54,7 +54,7 @@ public abstract class MinecraftClientMixin {
             //setScreen(null);
             HohxilAutoLoginClient.reconnect(Minecraft.getInstance(), false);
         }else if (screen instanceof TitleScreen){
-            if (lastScreen == null) HohxilAutoLoginClient.onLoaded((Minecraft)(Object)this);
+            if (lastScreen == null) HohxilAutoLoginClient.onLoaded(Minecraft.getInstance());
         }
 
         if (!(screen instanceof GenericMessageScreen)) lastScreen = screen;
