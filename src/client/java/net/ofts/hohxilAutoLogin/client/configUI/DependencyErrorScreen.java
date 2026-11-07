@@ -27,7 +27,7 @@ public class DependencyErrorScreen extends Screen {
 
         this.grid.addChild(Button.builder(
                 Component.literal("返回菜单"),
-                _ -> this.minecraft.setScreen(parent)
+                _ -> this.minecraft.gui.setScreen(parent)
         ).bounds(this.width / 2 - 100, this.height / 2 + 20, 200, 20).build());
         
         this.grid.arrangeElements();

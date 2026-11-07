@@ -23,7 +23,6 @@ import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.network.chat.Component;
 import net.ofts.hohxilAutoLogin.client.configUI.ModMenuAPIImpl;
 import net.ofts.hohxilAutoLogin.client.menu.MenuManager;
-import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,8 +65,8 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
         });
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, _) -> CommandBuilder.buildCommand(dispatcher));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (openActionMenu.consumeClick() && client.screen == null) {
-                client.setScreen(new RunActionMenu());
+            if (openActionMenu.consumeClick() && client.gui.screen() == null) {
+                client.gui.setScreen(new RunActionMenu());
             }
         });
 
@@ -75,8 +74,8 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
 
         openActionMenu = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "打开手动运行菜单", // Translation key
-                InputConstants.Type.KEYSYM, // Type
-                GLFW.GLFW_KEY_U, // Default key
+                InputConstants.Type.KEYBOARD, // Type
+                InputConstants.KEY_U, // Default key
                 KeyMapping.Category.MISC // Category
         ));
     }
@@ -195,7 +194,7 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
                 }
             }
 
-            if (!(force || client.screen instanceof DisconnectedScreen)) return;
+            if (!(force || client.gui.screen() instanceof DisconnectedScreen)) return;
 
             String address = config.address;
             if (oldInfo == null){
@@ -205,9 +204,9 @@ public class HohxilAutoLoginClient implements ClientModInitializer {
             client.execute(() -> {
                 LOGGER.info("reconnecting...");
 
-                assert client.screen != null;
+                assert client.gui.screen() != null;
                 ConnectScreen.startConnecting(
-                        client.screen,
+                        client.gui.screen(),
                         client,
                         ServerAddress.parseString(address),
                         oldInfo,

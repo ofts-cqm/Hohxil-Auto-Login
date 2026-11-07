@@ -12,7 +12,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class IPNBlocker {
     @Inject(method="checkNewItems", at = @At("HEAD"), cancellable = true)
     private void blockCheckNewItems(CallbackInfo ci){
-        LoggerFactory.getLogger("IPNBlocker").info("CheckNewItems blocked");
         ci.cancel();
     }
 }

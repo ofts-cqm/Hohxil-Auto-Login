@@ -92,7 +92,7 @@ public class RunActionMenu extends Screen {
 
         private static void runAction(String action){
             runCommand(action);
-            Minecraft.getInstance().setScreen(null);
+            Minecraft.getInstance().gui.setScreen(null);
         }
 
         @Override
